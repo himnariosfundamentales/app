@@ -1,0 +1,58 @@
+name: Deploy a GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.8
+          cache: true
+
+      - run: flutter pub get
+
+      # --no-web-resources-cdn: canvaskit se sirve desde el propio sitio para
+      # que el service worker lo guarde y la app abra sin conexión.
+      # DESPLIEGUE y despliegue.txt llevan el mismo commit: si la app abierta
+      # ve en despliegue.txt otro distinto al suyo, ofrece actualizarse.
+      - run: flutter build web --release --base-href "/app/" --no-web-resources-cdn --dart-define=DESPLIEGUE=${{ github.sha }}
+      - run: echo -n "${{ github.sha }}" > build/web/despliegue.txt
+
+      # versiones.json de cada himnario, con la huella de cada hoja: la app lo
+      # compara para saber cuáles cambiaron. Se genera aquí para que siempre
+      # coincida con las imágenes publicadas, aunque no se haya regenerado a mano.
+      - run: |
+          for carpeta in assets/himnarios/*/; do
+            python3 tool/generar_versiones.py "$carpeta" "build/web/assets/${carpeta}versiones.json"
+          done
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
