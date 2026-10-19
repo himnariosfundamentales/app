@@ -145,7 +145,7 @@ class AyudaScreen extends StatelessWidget {
             contenido: [
               _Subtitulo('Descargar un himnario'),
               _Punto(
-                '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 30 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB; mejor con Wi-Fi). Después funciona sin internet.',
+                '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB; mejor con Wi-Fi). Después funciona sin internet.',
               ),
               _Subtitulo(
                 'Verificar descargas (menú ⋮ de la pantalla principal)',
