@@ -1,10 +1,14 @@
+import 'dart:ui_web' as ui_web;
+
 import 'package:flutter/material.dart';
 import 'screens/descarga_screen.dart';
 import 'screens/inicio_screen.dart';
+import 'services/historial_web.dart';
 import 'services/respaldo_service.dart';
 import 'services/version_app_service.dart';
 
 void main() {
+  ui_web.urlStrategy = HistorialWeb();
   runApp(const HimnarioApp());
 }
 

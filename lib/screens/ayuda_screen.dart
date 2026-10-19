@@ -207,7 +207,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Punto('Versión ${VersionAppService.version}.'),
                     _Punto(
-                      'Algunos títulos de los himnos pueden contener errores, porque fueron generados automáticamente.',
+                      'Los títulos de los himnos que aparecen en las listas de búsqueda se obtuvieron de forma automática, por lo tanto algunos podrían llegar a contener errores.',
                     ),
                   ],
                 ),
