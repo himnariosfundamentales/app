@@ -31,6 +31,7 @@ class _DescargaScreenState extends State<DescargaScreen> {
       _descargando = true;
       _huboFallos = false;
       _completados = 0;
+      _total = 0;
       _estado = 'Descargando el himnario a la memoria local...';
     });
 
@@ -74,8 +75,10 @@ class _DescargaScreenState extends State<DescargaScreen> {
     setState(() {
       _descargando = false;
       _huboFallos = true;
-      _estado =
-          'No se pudieron descargar $fallidos de $_total hojas. Revisa tu conexión e inténtalo de nuevo.';
+      // Sin total ni siquiera se pudo leer la lista de hojas.
+      _estado = _total == 0
+          ? 'No se pudo preparar la descarga. Revisa tu conexión e inténtalo de nuevo.'
+          : 'No se pudieron descargar $fallidos de $_total hojas. Revisa tu conexión e inténtalo de nuevo.';
     });
   }
 
@@ -101,71 +104,89 @@ class _DescargaScreenState extends State<DescargaScreen> {
     double progreso = _total > 0 ? _completados / _total : 0.0;
 
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.cloud_download, size: 80, color: Colors.blue),
-              const SizedBox(height: 24),
-              const Text(
-                'Bienvenido al Himnario',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _estado,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: _huboFallos
-                      ? Theme.of(context).colorScheme.error
-                      : Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              if (_descargando) ...[
-                LinearProgressIndicator(value: progreso, minHeight: 10),
-                const SizedBox(height: 16),
-                Text(
-                  _total == 0
-                      ? 'Preparando...'
-                      : 'Descargado: $_completados de $_total hojas (${(progreso * 100).toInt()}%)',
-                ),
-              ] else ...[
-                ElevatedButton.icon(
-                  onPressed: _iniciarDescarga,
-                  icon: Icon(_huboFallos ? Icons.refresh : Icons.download),
-                  label: Text(
-                    _huboFallos
-                        ? 'Reintentar descarga'
-                        : 'Descargar Himnario Localmente',
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
+      // En pantallas chicas (o un celular en horizontal) no cabe todo: se
+      // desplaza, y si sobra espacio queda centrado.
+      body: LayoutBuilder(
+        builder: (context, restricciones) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: restricciones.maxHeight),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.cloud_download,
+                      size: 80,
+                      color: Colors.blue,
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Bienvenido al Himnario',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _estado,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: _huboFallos
+                            ? Theme.of(context).colorScheme.error
+                            : Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    if (_descargando) ...[
+                      LinearProgressIndicator(value: progreso, minHeight: 10),
+                      const SizedBox(height: 16),
+                      Text(
+                        _total == 0
+                            ? 'Preparando...'
+                            : 'Descargado: $_completados de $_total hojas (${(progreso * 100).toInt()}%)',
+                      ),
+                    ] else ...[
+                      ElevatedButton.icon(
+                        onPressed: _iniciarDescarga,
+                        icon: Icon(
+                          _huboFallos ? Icons.refresh : Icons.download,
+                        ),
+                        label: Text(
+                          _huboFallos
+                              ? 'Reintentar descarga'
+                              : 'Descargar Himnario Localmente',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _restaurar,
+                        icon: const Icon(Icons.restore),
+                        label: const Text('Restaurar desde archivo'),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: _irAlInicio,
+                        child: const Text(
+                          'Continuar sin descargar (requiere internet)',
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _restaurar,
-                  icon: const Icon(Icons.restore),
-                  label: const Text('Restaurar desde archivo'),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _irAlInicio,
-                  child: const Text(
-                    'Continuar sin descargar (requiere internet)',
-                  ),
-                ),
-              ],
-            ],
+              ),
+            ),
           ),
         ),
       ),

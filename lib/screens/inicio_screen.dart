@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../data/catalogo.dart';
 import '../models/himnario.dart';
@@ -5,11 +7,14 @@ import '../models/himno.dart';
 import '../services/actualizacion_service.dart';
 import '../services/download_service.dart';
 import '../services/instalacion_web.dart';
+import '../services/red_web.dart';
+import '../services/respaldo_service.dart';
 import '../services/terminos_service.dart';
 import '../services/version_app_service.dart';
 import 'ayuda_screen.dart';
 import 'descarga_ui.dart';
 import 'himnario_screen.dart';
+import 'progreso_ui.dart';
 import 'respaldo_ui.dart';
 import 'visor_screen.dart';
 
@@ -40,9 +45,22 @@ class _InicioScreenState extends State<InicioScreen> {
   @override
   void initState() {
     super.initState();
+    // Con unos segundos de espera ya se cargó todo lo que la app usa al abrir
+    // (la lista de assets se pide al mostrar las portadas).
+    unawaited(
+      Future<void>.delayed(
+        const Duration(seconds: 5),
+        RedWeb.guardarArchivosDeLaApp,
+      ),
+    );
     _cargarEstados();
     _revisarActualizaciones();
   }
+
+  // Lo que se revisa por su cuenta (al abrir la app, o tras "Verificar
+  // descargas") no abre su aviso encima de otro diálogo o pantalla: queda en
+  // el botón de actualización.
+  bool get _sinNadaEncima => ModalRoute.of(context)?.isCurrent ?? false;
 
   @override
   void dispose() {
@@ -74,7 +92,9 @@ class _InicioScreenState extends State<InicioScreen> {
         await ActualizacionService.revisarTodos();
     if (!mounted) return;
     setState(() => _actualizaciones = _pendientes(revisiones));
-    if (_actualizaciones.isNotEmpty) await _ofrecerActualizacion();
+    if (_actualizaciones.isNotEmpty && _sinNadaEncima) {
+      await _ofrecerActualizacion();
+    }
   }
 
   void _buscar(String texto) =>
@@ -121,10 +141,13 @@ class _InicioScreenState extends State<InicioScreen> {
   // Tras restaurar se revisa de nuevo: si el respaldo era más viejo que lo
   // publicado, ofrece bajar solo las hojas que cambiaron.
   Future<void> _restaurarRespaldo() async {
-    if (await RespaldoUi.restaurar(context) != null && mounted) {
-      await _cargarEstados();
-      await _revisarActualizaciones();
-    }
+    final ResultadoRestauracion? resultado = await RespaldoUi.restaurar(
+      context,
+    );
+    if (!mounted) return;
+    // Aunque falle, pudo haber aceptado los términos de algún himnario.
+    await _cargarEstados();
+    if (resultado != null) await _revisarActualizaciones();
   }
 
   Future<void> _verificarDescargas() async {
@@ -189,7 +212,7 @@ class _InicioScreenState extends State<InicioScreen> {
           content: Text('Los himnarios descargados están completos y al día.'),
         ),
       );
-    } else {
+    } else if (_sinNadaEncima) {
       await _ofrecerActualizacion();
     }
   }
@@ -289,23 +312,19 @@ class _InicioScreenState extends State<InicioScreen> {
       0,
       (suma, pendiente) => suma + pendiente.hojas.length,
     );
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: const Text('Actualizando himnarios'),
-          content: ValueListenableBuilder<int>(
-            valueListenable: hechas,
-            builder: (context, valor, _) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LinearProgressIndicator(value: valor / total),
-                const SizedBox(height: 12),
-                Text('$valor de $total hojas'),
-              ],
-            ),
+    final DialogoProgreso progreso = DialogoProgreso.abrir(
+      context,
+      (context) => AlertDialog(
+        title: const Text('Actualizando himnarios'),
+        content: ValueListenableBuilder<int>(
+          valueListenable: hechas,
+          builder: (context, valor, _) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              LinearProgressIndicator(value: valor / total),
+              const SizedBox(height: 12),
+              Text('$valor de $total hojas'),
+            ],
           ),
         ),
       ),
@@ -321,9 +340,9 @@ class _InicioScreenState extends State<InicioScreen> {
       );
       anteriores += pendiente.hojas.length;
     }
-    if (!mounted) return;
-    Navigator.of(context).pop();
+    progreso.cerrar();
     hechas.dispose();
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -526,9 +545,10 @@ class _InicioScreenState extends State<InicioScreen> {
         ),
         const Spacer(),
         // Alto fijo: el botón principal queda a la misma altura en todas las
-        // tarjetas, tengan uno o dos botones.
+        // tarjetas, tengan uno o dos botones. En celulares y tablets cada
+        // botón ocupa 48 de alto (lo mínimo para tocarlo con el dedo).
         SizedBox(
-          height: 84,
+          height: 96,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

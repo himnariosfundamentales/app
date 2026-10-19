@@ -6,6 +6,9 @@ import 'red_web.dart';
 /// vieja. Sirve sobre todo para la app instalada que se queda abierta en
 /// segundo plano, que no vuelve a cargar su código por sí sola.
 class VersionAppService {
+  /// La que se muestra al final de la Ayuda.
+  static const String version = '1.1.0';
+
   static const String _despliegue = String.fromEnvironment('DESPLIEGUE');
 
   /// Queda en true al detectar una versión nueva: el menú ofrece "Actualizar

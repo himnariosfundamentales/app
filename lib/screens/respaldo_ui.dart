@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 import '../services/red_web.dart';
 import '../services/respaldo_service.dart';
+import 'progreso_ui.dart';
 import 'terminos_ui.dart';
 
 /// Guardar y restaurar el respaldo de los himnarios descargados, con su
@@ -21,11 +22,21 @@ class RespaldoUi {
       return;
     }
     if (!context.mounted) return;
-    final int faltantes = await _conProgreso(
-      context,
-      'Preparando respaldo',
-      (onProgreso) => RespaldoService.guardar(onProgreso: onProgreso),
-    );
+    final int faltantes;
+    try {
+      faltantes = await _conProgreso(
+        context,
+        'Preparando respaldo',
+        (onProgreso) => RespaldoService.guardar(onProgreso: onProgreso),
+      );
+    } catch (_) {
+      mensajes.showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo crear el respaldo. Inténtalo de nuevo.'),
+        ),
+      );
+      return;
+    }
     mensajes.showSnackBar(
       SnackBar(
         duration: const Duration(seconds: 8),
@@ -76,13 +87,18 @@ class RespaldoUi {
         ),
       );
       return resultado;
-    } on FormatException catch (e) {
+    } catch (e) {
       if (context.mounted) {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('No se pudo restaurar'),
-            content: Text(e.message),
+            content: Text(
+              e is FormatException
+                  ? e.message
+                  : 'El archivo está dañado o el dispositivo no tiene espacio '
+                        'suficiente.',
+            ),
             actions: [
               FilledButton(
                 onPressed: () => Navigator.pop(context),
@@ -102,39 +118,32 @@ class RespaldoUi {
     Future<T> Function(void Function(int hechas, int total) onProgreso) tarea,
   ) async {
     final ValueNotifier<(int, int)> avance = ValueNotifier((0, 0));
-    final NavigatorState navegador = Navigator.of(context);
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: Text(titulo),
-          content: ValueListenableBuilder<(int, int)>(
-            valueListenable: avance,
-            builder: (context, valor, _) {
-              final (int hechas, int total) = valor;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  LinearProgressIndicator(
-                    value: total == 0 ? null : hechas / total,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    total == 0 ? 'Preparando...' : '$hechas de $total hojas',
-                  ),
-                ],
-              );
-            },
-          ),
+    final DialogoProgreso progreso = DialogoProgreso.abrir(
+      context,
+      (context) => AlertDialog(
+        title: Text(titulo),
+        content: ValueListenableBuilder<(int, int)>(
+          valueListenable: avance,
+          builder: (context, valor, _) {
+            final (int hechas, int total) = valor;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LinearProgressIndicator(
+                  value: total == 0 ? null : hechas / total,
+                ),
+                const SizedBox(height: 12),
+                Text(total == 0 ? 'Preparando...' : '$hechas de $total hojas'),
+              ],
+            );
+          },
         ),
       ),
     );
     try {
       return await tarea((hechas, total) => avance.value = (hechas, total));
     } finally {
-      navegador.pop();
+      progreso.cerrar();
       avance.dispose();
     }
   }

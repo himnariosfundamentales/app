@@ -11,7 +11,7 @@ List<Himno> buscarEn(String texto, List<Himno> lista) {
       .where(
         (himno) =>
             himno.numero.toString().contains(consulta) ||
-            normalizar(himno.nombre).contains(consulta),
+            himno.claveBusqueda.contains(consulta),
       )
       .toList();
   return [
@@ -20,21 +20,35 @@ List<Himno> buscarEn(String texto, List<Himno> lista) {
   ];
 }
 
-// Sin acentos ni signos (¿, ¡, comas) y con la ñ después de la n: sirve
-// para ordenar como diccionario y para buscar sin importar acentos.
-String normalizar(String nombre) {
-  const conAcento = 'áéíóúü';
-  const sinAcento = 'aeiouu';
-  final buffer = StringBuffer();
-  for (final letra in nombre.toLowerCase().split('')) {
-    final i = conAcento.indexOf(letra);
+/// Para buscar: minúsculas, sin acentos y con la ñ como n ("senor" encuentra
+/// "Señor").
+String normalizar(String texto) => _limpiar(texto, 'n');
+
+/// Para ordenar como diccionario: igual que [normalizar], pero con la ñ
+/// después de la n.
+String claveDeOrden(String nombre) => _limpiar(nombre, 'n\u007f');
+
+const String _conAcento = 'áéíóúü';
+const String _sinAcento = 'aeiouu';
+final RegExp _espacios = RegExp(r' +');
+
+// Los signos (¿, ¡, comas, "90:1-2") pasan a ser espacios para que los
+// números no se junten: "Salmo 90:1-2" no debe aparecer al buscar "12".
+String _limpiar(String texto, String enie) {
+  final StringBuffer buffer = StringBuffer();
+  for (final String letra in texto.toLowerCase().split('')) {
+    final int i = _conAcento.indexOf(letra);
+    final int codigo = letra.codeUnitAt(0);
     if (i >= 0) {
-      buffer.write(sinAcento[i]);
+      buffer.write(_sinAcento[i]);
     } else if (letra == 'ñ') {
-      buffer.write('n\u007f');
-    } else if (RegExp(r'[a-z0-9 ]').hasMatch(letra)) {
+      buffer.write(enie);
+    } else if ((codigo >= 0x61 && codigo <= 0x7a) ||
+        (codigo >= 0x30 && codigo <= 0x39)) {
       buffer.write(letra);
+    } else {
+      buffer.write(' ');
     }
   }
-  return buffer.toString().replaceAll(RegExp(r' +'), ' ').trim();
+  return buffer.toString().replaceAll(_espacios, ' ').trim();
 }

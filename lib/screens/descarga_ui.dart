@@ -6,6 +6,7 @@ import '../services/actualizacion_service.dart';
 import '../services/download_service.dart';
 import '../services/red_web.dart';
 import '../services/terminos_service.dart';
+import 'progreso_ui.dart';
 import 'terminos_ui.dart';
 
 /// Descarga de un himnario desde la pantalla principal, con su diálogo de
@@ -24,43 +25,36 @@ class DescargaUi {
     if (!context.mounted) return true;
 
     final ScaffoldMessengerState mensajes = ScaffoldMessenger.of(context);
-    final NavigatorState navegador = Navigator.of(context);
     final ValueNotifier<(int, int)> avance = ValueNotifier((0, 0));
     // Se conoce al leer versiones.json, antes de la primera hoja.
     String? peso;
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: Text('Descargando ${himnario.nombre}'),
-          content: ValueListenableBuilder<(int, int)>(
-            valueListenable: avance,
-            builder: (context, valor, _) {
-              final (int hechas, int total) = valor;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  LinearProgressIndicator(
-                    value: total == 0 ? null : hechas / total,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    total == 0 ? 'Preparando...' : '$hechas de $total hojas',
-                  ),
-                  if (peso != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        'Peso aproximado: $peso',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+    final DialogoProgreso progreso = DialogoProgreso.abrir(
+      context,
+      (context) => AlertDialog(
+        title: Text('Descargando ${himnario.nombre}'),
+        content: ValueListenableBuilder<(int, int)>(
+          valueListenable: avance,
+          builder: (context, valor, _) {
+            final (int hechas, int total) = valor;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LinearProgressIndicator(
+                  value: total == 0 ? null : hechas / total,
+                ),
+                const SizedBox(height: 12),
+                Text(total == 0 ? 'Preparando...' : '$hechas de $total hojas'),
+                if (peso != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Peso aproximado: $peso',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                ],
-              );
-            },
-          ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -86,11 +80,12 @@ class DescargaUi {
     );
     if (fallidas == 0) {
       unawaited(RedWeb.pedirAlmacenamientoPersistente());
+      unawaited(RedWeb.guardarArchivosDeLaApp());
       if (manifiesto != null) {
         await ActualizacionService.guardarLocal(himnario, manifiesto);
       }
     }
-    navegador.pop();
+    progreso.cerrar();
     avance.dispose();
     mensajes.showSnackBar(
       SnackBar(

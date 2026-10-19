@@ -26,6 +26,7 @@ class VisorScreen extends StatefulWidget {
 class _VisorScreenState extends State<VisorScreen> {
   static const double _zoomMaximo = 4.0;
   static const String _keyAnchoHorizontal = 'ancho_hoja_horizontal';
+  static const String _keyMultipagina = 'multipagina_horizontal';
   static const double _anchoToqueBarra = 36;
 
   static const Widget _indicadorCarga = Center(
@@ -44,14 +45,21 @@ class _VisorScreenState extends State<VisorScreen> {
   final SearchController _buscador = SearchController();
   bool? _busquedaPantallaCompleta;
   ui.PointerDeviceKind? _ultimoPuntero;
-  // Un lugar por página del himno; null mientras esa imagen se decodifica.
-  final List<ui.Image?> _paginas = [];
+
+  // Las hojas del himnario: las páginas de cada himno y todas en orden, como
+  // en el libro (cada una una vez). Null mientras se leen.
+  Map<int, List<String>>? _paginasPorHimno;
+  List<String> _todas = const [];
   int _paginaActual = 1;
   bool _errorCarga = false;
 
-  // Si el usuario cambia de himno o sale antes de que termine una carga,
-  // las páginas de esa carga ya no son las vigentes y se descartan.
-  int _cargaVigente = 0;
+  // Hojas ya decodificadas, por ruta. Se conservan las que se ven y las que
+  // siguen, para pasar de hoja sin esperar; las demás se liberan.
+  final Map<String, ui.Image> _imagenes = {};
+  // Las que no se pudieron abrir: se muestra el error en lugar de
+  // reintentarlas en bucle. Se vuelven a intentar al cambiar de página.
+  final Set<String> _fallidas = {};
+  bool _cargandoImagenes = false;
 
   final Set<int> _dedosEnPantalla = {};
   Offset? _inicioDeslizamiento;
@@ -68,6 +76,12 @@ class _VisorScreenState extends State<VisorScreen> {
   // hasta que el usuario la ajusta con las barras: la hoja se ajusta a lo alto
   // y se ve completa.
   double? _fraccionAncho;
+  // Lo mismo para las dos hojas del modo libro, aparte de la hoja sola y sin
+  // guardarse: al cambiar de página o de modo vuelven a verse completas.
+  double? _fraccionAnchoLibro;
+  // En horizontal se pueden ver las hojas de dos en dos, como un libro
+  // abierto, aunque sean de himnos distintos.
+  bool _multipagina = false;
   bool _conZoom = false;
   // Centro (x) de cada barra en la última distribución, para que arrastrar
   // una barra no cuente como deslizar a otra página.
@@ -80,12 +94,33 @@ class _VisorScreenState extends State<VisorScreen> {
     _transformacion.addListener(_alCambiarZoom);
     HardwareKeyboard.instance.addHandler(_alTecla);
     SharedPreferences.getInstance().then((prefs) {
-      final double? guardada = prefs.getDouble(_keyAnchoHorizontal);
-      if (guardada != null && mounted) {
-        setState(() => _fraccionAncho = guardada);
-      }
+      if (!mounted) return;
+      setState(() {
+        _fraccionAncho = prefs.getDouble(_keyAnchoHorizontal);
+        _multipagina = prefs.getBool(_keyMultipagina) ?? false;
+      });
+      _cargarImagenes();
     });
-    _cargarHimno();
+    _leerHojas();
+  }
+
+  Future<void> _leerHojas() async {
+    try {
+      final Map<int, List<String>> porHimno =
+          await DownloadService.paginasPorHimno(widget.himnario);
+      final List<String> todas = await DownloadService.todasLasRutas(
+        widget.himnario,
+      );
+      if (!mounted) return;
+      setState(() {
+        _paginasPorHimno = porHimno;
+        _todas = todas;
+      });
+      _cargarImagenes();
+    } catch (e) {
+      debugPrint('No se pudo leer la lista de hojas: $e');
+      if (mounted) setState(() => _errorCarga = true);
+    }
   }
 
   // Las barras se ocultan con zoom: la hoja ampliada ya no coincide con ellas.
@@ -98,14 +133,15 @@ class _VisorScreenState extends State<VisorScreen> {
 
   double _anchoHorizontal(Size vista, double aspecto) {
     final double completa = math.min(vista.width, vista.height * aspecto);
-    final double? fraccion = _fraccionAncho;
+    final double? fraccion = _enLibro ? _fraccionAnchoLibro : _fraccionAncho;
     return (fraccion == null ? completa : fraccion * vista.width).clamp(
       _anchoMinimo(vista, aspecto),
       vista.width,
     );
   }
 
-  // Las dos barras se mueven en espejo: la hoja crece o se achica centrada.
+  // Las dos barras se mueven en espejo: la hoja (o las dos del modo libro)
+  // crece o se achica centrada.
   void _ajustarAncho(Size vista, double aspecto, double cambio) {
     final double anterior = _anchoHorizontal(vista, aspecto);
     final double nuevo = (anterior + cambio).clamp(
@@ -122,14 +158,31 @@ class _VisorScreenState extends State<VisorScreen> {
       y.clamp(-maximo, 0.0),
       0,
     );
-    setState(() => _fraccionAncho = nuevo / vista.width);
+    setState(() {
+      if (_enLibro) {
+        _fraccionAnchoLibro = nuevo / vista.width;
+      } else {
+        _fraccionAncho = nuevo / vista.width;
+      }
+    });
   }
 
   Future<void> _guardarAncho() async {
     final double? fraccion = _fraccionAncho;
-    if (fraccion == null) return;
+    if (_enLibro || fraccion == null) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_keyAnchoHorizontal, fraccion);
+  }
+
+  Future<void> _cambiarMultipagina(bool valor) async {
+    _transformacion.value = Matrix4.identity();
+    setState(() {
+      _multipagina = valor;
+      _fraccionAnchoLibro = null;
+    });
+    _cargarImagenes();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyMultipagina, valor);
   }
 
   List<Himno> get _listaHimnos => widget.himnario.himnosPorNumero;
@@ -137,92 +190,202 @@ class _VisorScreenState extends State<VisorScreen> {
   int get _indiceActual =>
       _listaHimnos.indexWhere((h) => h.numero == _himnoActual.numero);
 
-  int get _totalPaginas => _paginas.length;
+  List<String> get _rutasHimno =>
+      _paginasPorHimno?[_himnoActual.numero] ?? const [];
+
+  int get _totalPaginas => _rutasHimno.length;
 
   bool get _hayZoom => _transformacion.value.getMaxScaleOnAxis() > 1.01;
 
-  // "24-1", "24-2"... en los himnos de varias hojas; "64" en los de una. Con
-  // la letra del himnario si tiene ("M24-1").
-  String _etiqueta(int pagina) {
-    final String numero = widget.himnario.etiqueta(_himnoActual.numero);
-    return _totalPaginas > 1 ? '$numero-$pagina' : numero;
+  bool get _enLibro =>
+      _multipagina &&
+      MediaQuery.orientationOf(context) == Orientation.landscape;
+
+  String? get _rutaActual {
+    final List<String> rutas = _rutasHimno;
+    return rutas.isEmpty
+        ? null
+        : rutas[(_paginaActual - 1).clamp(0, rutas.length - 1)];
   }
 
-  void _abrirHimno(Himno himno, {bool enUltimaPagina = false}) {
-    _liberarPaginas();
-    _transformacion.value = Matrix4.identity();
-    _altoContenido = 0;
-    setState(() {
-      _himnoActual = himno;
-      _errorCarga = false;
-      _paginaActual = 1;
-    });
-    _cargarHimno(enUltimaPagina: enUltimaPagina);
+  // En modo libro las hojas van de dos en dos como en el libro impreso: la
+  // primera va a la derecha, con una página en blanco a su izquierda, y si
+  // la última queda a la izquierda, a su derecha va otra en blanco. Así los
+  // himnos de dos hojas quedan juntos. En el libro, la posición 0 es esa
+  // página en blanco y la hoja i del himnario es la i + 1.
+  String? _hojaEn(int posicion) =>
+      posicion >= 1 && posicion <= _todas.length ? _todas[posicion - 1] : null;
+
+  // Posición de la izquierda del par donde está [ruta]; -1 si no está.
+  int _parDe(String? ruta) {
+    final int i = ruta == null ? -1 : _todas.indexOf(ruta);
+    return i < 0 ? -1 : (i + 1) - (i + 1) % 2;
+  }
+
+  // Lo que se ve, de izquierda a derecha: la página actual o, en modo libro,
+  // su par. Null es una página en blanco.
+  List<String?> get _rutasVisibles {
+    final String? actual = _rutaActual;
+    if (actual == null) return const [];
+    final int par = _parDe(actual);
+    if (!_enLibro || par < 0) return [actual];
+    return [_hojaEn(par), _hojaEn(par + 1)];
+  }
+
+  // Las que se ven y, después, las que siguen: las otras páginas del himno,
+  // de la más cercana a la más lejana, o en modo libro el par siguiente.
+  List<String> get _hojasNecesarias {
+    final String? actual = _rutaActual;
+    if (actual == null) return const [];
+    final int par = _parDe(actual);
+    if (_enLibro && par >= 0) {
+      return [
+        for (int posicion = par; posicion < par + 4; posicion++)
+          if (_hojaEn(posicion) case final String ruta) ruta,
+      ];
+    }
+    final List<String> rutas = _rutasHimno;
+    final int indice = rutas.indexOf(actual);
+    return [
+      for (int d = 0; d < rutas.length; d++)
+        for (final int j in {indice + d, indice - d})
+          if (j >= 0 && j < rutas.length) rutas[j],
+    ];
   }
 
   // Cada página es una imagen de 2400 px de ancho, con resolución de sobra
   // para el zoom: el zoom solo la escala y no hay que volver a dibujar nada.
-  Future<void> _cargarHimno({bool enUltimaPagina = false}) async {
-    final int carga = ++_cargaVigente;
-    final Himno himno = _himnoActual;
-    bool esVigente() => mounted && carga == _cargaVigente;
-
+  // Se decodifican de una en una, primero las que se ven; tras cada una se
+  // vuelve a ver qué hace falta, por si mientras tanto se cambió de página.
+  Future<void> _cargarImagenes() async {
+    if (_cargandoImagenes) return;
+    _cargandoImagenes = true;
     try {
-      final List<String> rutas = await DownloadService.paginasDe(
-        widget.himnario,
-        himno,
-      );
-      if (!esVigente()) return;
-      if (rutas.isEmpty) {
-        throw StateError('No hay páginas para el himno ${himno.numero}');
-      }
-      final int inicial = enUltimaPagina ? rutas.length : 1;
-      setState(() {
-        _paginas.addAll(List<ui.Image?>.filled(rutas.length, null));
-        _paginaActual = inicial;
-      });
-
-      // Primero la página que se va a mostrar y después las demás.
-      final List<int> orden = [
-        inicial - 1,
-        for (int i = 0; i < rutas.length; i++)
-          if (i != inicial - 1) i,
-      ];
-      for (final int i in orden) {
-        final ui.Image imagen = await decodeImageFromList(
-          await DownloadService.obtenerPagina(rutas[i]),
-        );
-        if (!esVigente()) {
-          imagen.dispose();
-          return;
+      while (mounted && !_errorCarga) {
+        final List<String> necesarias = _hojasNecesarias;
+        for (final String ruta in _imagenes.keys.toList()) {
+          if (!necesarias.contains(ruta)) _imagenes.remove(ruta)!.dispose();
         }
-        setState(() => _paginas[i] = imagen);
+        final String? siguiente = necesarias
+            .where((r) => !_imagenes.containsKey(r) && !_fallidas.contains(r))
+            .firstOrNull;
+        if (siguiente == null) return;
+        try {
+          final ui.Image imagen = await decodeImageFromList(
+            await DownloadService.obtenerPagina(siguiente),
+          );
+          if (!mounted) {
+            imagen.dispose();
+            return;
+          }
+          setState(() => _imagenes[siguiente] = imagen);
+        } catch (e) {
+          debugPrint('No se pudo abrir la hoja $siguiente: $e');
+          if (mounted) setState(() => _fallidas.add(siguiente));
+        }
       }
-    } catch (e) {
-      debugPrint('Error al cargar el himno ${himno.numero}: $e');
-      if (esVigente()) {
-        _liberarPaginas();
-        setState(() => _errorCarga = true);
-      }
+    } finally {
+      _cargandoImagenes = false;
     }
   }
 
-  void _liberarPaginas() {
-    for (final ui.Image? pagina in _paginas) {
-      pagina?.dispose();
+  // "24-1", "24-2"... en los himnos de varias hojas; "64" en los de una. Con
+  // la letra del himnario si tiene ("M24-1").
+  String _etiqueta(int numero, int pagina) {
+    final String etiqueta = widget.himnario.etiqueta(numero);
+    return (_paginasPorHimno?[numero]?.length ?? 1) > 1
+        ? '$etiqueta-$pagina'
+        : etiqueta;
+  }
+
+  // Una hoja se nombra con el himno actual si es una de sus páginas; si no,
+  // con el himno con que empieza ("2-2_3-1" es la página 2 del himno 2).
+  String _etiquetaDeHoja(String ruta) {
+    final int pagina = _rutasHimno.indexOf(ruta) + 1;
+    if (pagina > 0) return _etiqueta(_himnoActual.numero, pagina);
+    final (int numero, int paginaDeEse) = DownloadService.lugarDe(
+      widget.himnario,
+      ruta,
+    );
+    return _etiqueta(numero, paginaDeEse);
+  }
+
+  // Lo que se ve: ["24-1"], o en modo libro ["24-1", "24-2"] o ["51", "52"]
+  // (las páginas en blanco no se nombran).
+  List<String> get _etiquetasVisibles {
+    final List<String?> visibles = _rutasVisibles;
+    if (visibles.isEmpty) {
+      return [_etiqueta(_himnoActual.numero, _paginaActual)];
     }
-    _paginas.clear();
+    return [
+      for (final String? ruta in visibles)
+        if (ruta != null) _etiquetaDeHoja(ruta),
+    ];
+  }
+
+  void _abrirHimno(Himno himno, {bool enUltimaPagina = false, int pagina = 1}) {
+    _transformacion.value = Matrix4.identity();
+    _altoContenido = 0;
+    _fallidas.clear();
+    setState(() {
+      _himnoActual = himno;
+      _errorCarga = false;
+      _paginaActual = enUltimaPagina ? math.max(1, _rutasHimno.length) : pagina;
+      _fraccionAnchoLibro = null;
+    });
+    _cargarImagenes();
+  }
+
+  void _reintentar() {
+    _fallidas.clear();
+    setState(() => _errorCarga = false);
+    if (_paginasPorHimno == null) {
+      _leerHojas();
+    } else {
+      _cargarImagenes();
+    }
   }
 
   void _irAPagina(int numero) {
     _transformacion.value = Matrix4.identity();
-    setState(() => _paginaActual = numero);
+    _fallidas.clear();
+    setState(() {
+      _paginaActual = numero;
+      _fraccionAnchoLibro = null;
+    });
+    _cargarImagenes();
+  }
+
+  // Abre la hoja [ruta] como página actual, en el himno con que se nombra.
+  void _irAHoja(String ruta) {
+    final (int numero, int pagina) = DownloadService.lugarDe(
+      widget.himnario,
+      ruta,
+    );
+    if (numero == _himnoActual.numero) {
+      _irAPagina(pagina);
+      return;
+    }
+    final Himno? himno = _listaHimnos
+        .where((h) => h.numero == numero)
+        .firstOrNull;
+    if (himno != null) _abrirHimno(himno, pagina: pagina);
   }
 
   // Como un libro: primero se pasan las páginas del himno y después se llega
   // al himno vecino. Al retroceder desde la primera página se abre el himno
-  // anterior en su última página.
+  // anterior en su última página. En modo libro se pasa al par siguiente o al
+  // anterior, por todas las hojas del himnario.
   void _avanzar(int direccion) {
+    final int par = _parDe(_rutaActual);
+    if (_enLibro && par >= 0) {
+      final int destino = par + 2 * direccion;
+      if (destino < 0 || destino > _todas.length) return;
+      // La de la izquierda del par, o la primera hoja si ahí va la página
+      // en blanco.
+      _irAHoja(_hojaEn(destino) ?? _todas.first);
+      return;
+    }
     final int pagina = _paginaActual + direccion;
     if (pagina >= 1 && pagina <= _totalPaginas) {
       _irAPagina(pagina);
@@ -431,7 +594,10 @@ class _VisorScreenState extends State<VisorScreen> {
     HardwareKeyboard.instance.removeHandler(_alTecla);
     _buscador.dispose();
     _transformacion.dispose();
-    _liberarPaginas();
+    for (final ui.Image imagen in _imagenes.values) {
+      imagen.dispose();
+    }
+    _imagenes.clear();
     super.dispose();
   }
 
@@ -445,7 +611,7 @@ class _VisorScreenState extends State<VisorScreen> {
             const Icon(Icons.error_outline, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
-              'No se pudo abrir el himno #${_himnoActual.numero}',
+              'No se pudo abrir el himno #${widget.himnario.etiqueta(_himnoActual.numero)}',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
@@ -457,7 +623,7 @@ class _VisorScreenState extends State<VisorScreen> {
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: () => _abrirHimno(_himnoActual),
+              onPressed: _reintentar,
               icon: const Icon(Icons.refresh),
               label: const Text('Reintentar'),
             ),
@@ -467,13 +633,17 @@ class _VisorScreenState extends State<VisorScreen> {
     );
   }
 
-  Widget _construirPagina(ui.Image imagen) {
+  // [hojas] van lado a lado: una, o dos en modo libro. Null es una página en
+  // blanco.
+  Widget _construirPagina(List<ui.Image?> hojas) {
     return LayoutBuilder(
       builder: (context, restricciones) {
         final Size vista = restricciones.biggest;
-        final double aspecto = imagen.width / imagen.height;
+        final ui.Image muestra = hojas.nonNulls.first;
+        final double aspecto = hojas.length * muestra.width / muestra.height;
         // En horizontal la hoja a todo lo ancho no cabe a lo alto; por eso se
-        // angosta, con barras a los lados para ajustarla.
+        // angosta, con barras a los lados para ajustarla. En modo libro las
+        // dos hojas son un solo lienzo, con una barra a cada lado.
         final bool horizontal = vista.width > vista.height;
         final double ancho = horizontal
             ? _anchoHorizontal(vista, aspecto)
@@ -517,10 +687,19 @@ class _VisorScreenState extends State<VisorScreen> {
                 child: SizedBox(
                   width: ancho,
                   height: altoPagina,
-                  child: RawImage(
-                    image: imagen,
-                    fit: BoxFit.fill,
-                    filterQuality: FilterQuality.medium,
+                  child: Row(
+                    children: [
+                      for (final ui.Image? hoja in hojas)
+                        Expanded(
+                          child: hoja == null
+                              ? const ColoredBox(color: Colors.white)
+                              : RawImage(
+                                  image: hoja,
+                                  fit: BoxFit.fill,
+                                  filterQuality: FilterQuality.medium,
+                                ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -554,21 +733,40 @@ class _VisorScreenState extends State<VisorScreen> {
 
   Widget _construirCuerpo() {
     if (_errorCarga) return _construirError();
-    final ui.Image? imagen = _paginas.isEmpty
-        ? null
-        : _paginas[_paginaActual - 1];
-    if (imagen == null) return _indicadorCarga;
-    return _construirPagina(imagen);
+    final List<String?> visibles = _rutasVisibles;
+    if (_paginasPorHimno != null && visibles.isEmpty) {
+      return _construirError(); // un himno sin hojas
+    }
+    if (visibles.any(_fallidas.contains)) return _construirError();
+    if (visibles.isEmpty ||
+        visibles.any((ruta) => ruta != null && !_imagenes.containsKey(ruta))) {
+      // Por ejemplo al girar la pantalla en modo libro: ahora se ven otras.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _cargarImagenes();
+      });
+      return _indicadorCarga;
+    }
+    return _construirPagina([
+      for (final String? ruta in visibles)
+        ruta == null ? null : _imagenes[ruta],
+    ]);
   }
 
   @override
   Widget build(BuildContext context) {
+    final int par = _parDe(_rutaActual);
+    final bool libro = _enLibro && par >= 0;
     final int indice = _indiceActual;
-    final bool hayAnterior = indice > 0 || _paginaActual > 1;
-    final bool haySiguiente =
-        (indice >= 0 && indice < _listaHimnos.length - 1) ||
-        _paginaActual < _totalPaginas;
+    final List<String?> visibles = _rutasVisibles;
+    final bool hayAnterior = libro ? par > 0 : indice > 0 || _paginaActual > 1;
+    final bool haySiguiente = libro
+        ? par + 2 <= _todas.length
+        : (indice >= 0 && indice < _listaHimnos.length - 1) ||
+              _paginaActual < _totalPaginas;
     final bool mostrarPaginas = _totalPaginas > 1;
+    final bool mostrarMultipagina =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+    final List<String> etiquetas = _etiquetasVisibles;
 
     return Scaffold(
       // --- TOP BAR ---
@@ -578,7 +776,9 @@ class _VisorScreenState extends State<VisorScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Himno #${_etiqueta(_paginaActual)}',
+          libro
+              ? 'Himno: ${etiquetas.map((e) => '#$e').join(' y ')}'
+              : 'Himno #${etiquetas.first}',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -616,11 +816,11 @@ class _VisorScreenState extends State<VisorScreen> {
                   itemCount: _totalPaginas,
                   itemBuilder: (context, index) {
                     int numPagina = index + 1;
-                    bool esSeleccionada = numPagina == _paginaActual;
+                    bool esSeleccionada = visibles.contains(_rutasHimno[index]);
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
                       child: ChoiceChip(
-                        label: Text(_etiqueta(numPagina)),
+                        label: Text(_etiqueta(_himnoActual.numero, numPagina)),
                         selected: esSeleccionada,
                         onSelected: (bool selected) {
                           if (selected) _irAPagina(numPagina);
@@ -633,10 +833,11 @@ class _VisorScreenState extends State<VisorScreen> {
 
             if (mostrarPaginas) const SizedBox(height: 6),
 
-            // NAVEGACIÓN << # >> (páginas y himnos, como un libro)
+            // NAVEGACIÓN << # >> (páginas y himnos, como un libro), centrada
+            // entre dos espacios iguales; en el derecho va "Multipágina".
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.arrow_back_ios),
                   onPressed: hayAnterior ? () => _avanzar(-1) : null,
@@ -645,7 +846,7 @@ class _VisorScreenState extends State<VisorScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Text(
-                    _etiqueta(_paginaActual),
+                    etiquetas.join(' y '),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -656,6 +857,34 @@ class _VisorScreenState extends State<VisorScreen> {
                   icon: const Icon(Icons.arrow_forward_ios),
                   onPressed: haySiguiente ? () => _avanzar(1) : null,
                   tooltip: 'Siguiente',
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: mostrarMultipagina
+                        ? Padding(
+                            padding: const EdgeInsets.only(right: 16),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () => _cambiarMultipagina(!_multipagina),
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox(
+                                      value: _multipagina,
+                                      onChanged: (valor) =>
+                                          _cambiarMultipagina(valor ?? false),
+                                    ),
+                                    const Text('Multipágina'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
                 ),
               ],
             ),

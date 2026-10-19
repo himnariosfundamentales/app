@@ -1,6 +1,5 @@
 import 'dart:ui' show Color;
 
-import '../data/busqueda.dart';
 import 'himno.dart';
 
 /// Un himnario de la app. Sus hojas están en `assets/himnarios/<id>/`.
@@ -51,5 +50,5 @@ class Himnario {
     ..sort((a, b) => a.numero.compareTo(b.numero));
 
   late final List<Himno> himnosPorNombre = [...himnos]
-    ..sort((a, b) => normalizar(a.nombre).compareTo(normalizar(b.nombre)));
+    ..sort((a, b) => a.claveOrden.compareTo(b.claveOrden));
 }

@@ -57,7 +57,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin === self.location.origin) {
-    if (url.pathname.includes('/assets/himnarios/')) {
+    // Las portadas pueden cambiar sin que cambie versiones.json: van como el
+    // resto de la app.
+    if (url.pathname.includes('/assets/himnarios/') && !url.pathname.endsWith('/portada.webp')) {
       // Las hojas no cambian salvo que la app pida la versión nueva
       // ('reload'), cuando versiones.json indica que cambió.
       event.respondWith(
@@ -71,24 +73,29 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-function descargarYGuardar(request, opciones) {
-  return fetch(request, opciones).then(async (respuesta) => {
-    if (respuesta.ok) {
-      try {
-        const cache = await caches.open(CACHE);
-        const etag = respuesta.headers.get('etag');
-        const guardada = etag ? await cache.match(request) : undefined;
-        // Si el servidor dice que no cambió no se reescribe: main.dart.js y
-        // canvaskit pesan ~8 MB y se revisan cada vez que se abre la app.
-        if (!guardada || guardada.headers.get('etag') !== etag) {
-          await cache.put(request, respuesta.clone());
-        }
-      } catch (e) {
-        console.warn('No se pudo guardar en caché', request.url, e);
-      }
-    }
+function descargarYGuardar(request) {
+  return fetch(request).then(async (respuesta) => {
+    await guardarSiCambio(request, respuesta.clone());
     return respuesta;
   });
+}
+
+async function guardarSiCambio(request, respuesta) {
+  if (!respuesta.ok) return;
+  try {
+    const cache = await caches.open(CACHE);
+    const etag = respuesta.headers.get('etag');
+    const guardada = etag ? await cache.match(request) : undefined;
+    // Si el servidor dice que no cambió no se reescribe: main.dart.js y
+    // canvaskit pesan ~8 MB y se revisan cada vez que se abre la app.
+    if (guardada && guardada.headers.get('etag') === etag) {
+      await respuesta.body?.cancel();
+      return;
+    }
+    await cache.put(request, respuesta);
+  } catch (e) {
+    console.warn('No se pudo guardar en caché', request.url, e);
+  }
 }
 
 async function cachePrimero(request) {
@@ -97,12 +104,19 @@ async function cachePrimero(request) {
 }
 
 // App (index.html, main.dart.js, canvaskit...): la versión más nueva si hay
-// red; si la red falla o tarda demasiado, la copia guardada. 'no-cache' salta
-// la caché HTTP de GitHub Pages (10 minutos): siempre le pregunta al servidor
-// si cambió, y si no cambió la respuesta es mínima.
+// red; si la red falla o el servidor tarda demasiado en responder, la copia
+// guardada. Solo se espera la respuesta, no el archivo completo: si no, un
+// archivo grande y lento caía en la copia vieja mientras los chicos llegaban
+// nuevos, y se mezclaban dos versiones de la app. La copia se guarda aparte,
+// mientras la página recibe el archivo. 'no-cache' salta la caché HTTP de
+// GitHub Pages (10 minutos): siempre le pregunta al servidor si cambió, y si
+// no cambió la respuesta es mínima.
 async function redPrimero(event) {
   const request = event.request;
-  const red = descargarYGuardar(request, { cache: 'no-cache' });
+  const red = fetch(request, { cache: 'no-cache' }).then((respuesta) => {
+    event.waitUntil(guardarSiCambio(request, respuesta.clone()));
+    return respuesta;
+  });
   event.waitUntil(red.catch(() => {}));
 
   try {

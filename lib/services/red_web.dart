@@ -35,9 +35,14 @@ class RedWeb {
     }
   }
 
-  /// Baja la versión más nueva del archivo desde el servidor. El service
-  /// worker la guarda en su caché en lugar de la que hubiera.
-  static Future<bool> descargarVersionNueva(String url) async {
+  /// Baja la versión más nueva del archivo desde el servidor y la deja
+  /// guardada en el dispositivo. Con [huella] solo cuenta si lo que llegó es
+  /// esa versión: justo después de publicar, el servidor puede seguir
+  /// entregando la anterior unos minutos.
+  static Future<bool> descargarVersionNueva(
+    String url, {
+    String? huella,
+  }) async {
     try {
       final web.Response respuesta = await web.window
           .fetch(url.toJS, web.RequestInit(cache: 'reload'))
@@ -45,10 +50,12 @@ class RedWeb {
       if (!respuesta.ok) return false;
       final Uint8List datos = (await respuesta.arrayBuffer().toDart).toDart
           .asUint8List();
-      // En la primera visita el service worker puede tardar en tomar el
-      // control de la página: la descarga no pasa por él y no queda guardada.
-      // Entonces se guarda desde aquí.
-      if (!_hayServiceWorker) {
+      final String recibida = await huellaDe(datos);
+      if (huella != null && recibida != huella) return false;
+      // Normalmente la guarda el service worker al pasar la descarga. Si no
+      // controla la página (en la primera visita puede tardar en tomar el
+      // control) o no pudo guardarla, se guarda desde aquí.
+      if (await huellaGuardada(url) != recibida) {
         await guardar(
           url,
           datos,
@@ -58,14 +65,6 @@ class RedWeb {
       return true;
     } catch (_) {
       return false;
-    }
-  }
-
-  static bool get _hayServiceWorker {
-    try {
-      return web.window.navigator.serviceWorker.controller != null;
-    } catch (_) {
-      return false; // sin HTTPS (por ejemplo, abierta por IP) no existe
     }
   }
 
@@ -207,18 +206,62 @@ class RedWeb {
     }
   }
 
-  static Future<bool> estaGuardado(String url) async {
-    try {
-      return await web.window.caches.match(url.toJS).toDart != null;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  static Future<void> borrarGuardado(String url) async {
+  /// Cuáles de [urls] están guardadas en el dispositivo, con una sola consulta
+  /// a la caché: preguntar por cientos de hojas de a una era lento.
+  static Future<List<bool>> estanGuardadas(List<String> urls) async {
+    Set<String> guardadas = {};
     try {
       final web.Cache cache = await web.window.caches.open(_cache).toDart;
-      await cache.delete(url.toJS).toDart;
+      guardadas = {
+        for (final web.Request request in (await cache.keys().toDart).toDart)
+          request.url,
+      };
+    } catch (_) {}
+    // La caché las devuelve completas; las de los assets son relativas.
+    return [
+      for (final String url in urls) guardadas.contains(urlDelSitio(url)),
+    ];
+  }
+
+  static Future<void> borrarGuardados(Iterable<String> urls) async {
+    try {
+      final web.Cache cache = await web.window.caches.open(_cache).toDart;
+      await Future.wait(urls.map((url) => cache.delete(url.toJS).toDart));
+    } catch (_) {}
+  }
+
+  // Los mismos que guarda web/sw.js además de los del sitio (las fuentes).
+  static const List<String> _hostsExternos = [
+    'fonts.gstatic.com',
+    'www.gstatic.com',
+  ];
+
+  /// Guarda los archivos de la app que ya se cargaron sin pasar por el
+  /// service worker (main.dart.js, canvaskit, fuentes...). En la primera
+  /// visita la app puede arrancar antes de que el service worker controle la
+  /// página, y entonces nada de eso queda guardado: la app no abriría sin
+  /// internet aunque los himnarios estén descargados.
+  static Future<void> guardarArchivosDeLaApp() async {
+    try {
+      final web.Cache cache = await web.window.caches.open(_cache).toDart;
+      final String origen = web.window.location.origin;
+      for (final web.PerformanceEntry entrada
+          in web.window.performance.getEntriesByType('resource').toDart) {
+        final String url = entrada.name;
+        final Uri uri = Uri.parse(url);
+        if ((entrada as web.PerformanceResourceTiming).workerStart > 0 ||
+            !(url.startsWith(origen) || _hostsExternos.contains(uri.host)) ||
+            uri.path.contains('/assets/himnarios/') ||
+            uri.path.endsWith('/sw.js') ||
+            uri.path.endsWith('/despliegue.txt')) {
+          continue;
+        }
+        try {
+          if (await cache.match(url.toJS).toDart == null) {
+            await cache.add(url.toJS).toDart;
+          }
+        } catch (_) {}
+      }
     } catch (_) {}
   }
 }

@@ -67,9 +67,9 @@ class RespaldoService {
         for (final String ruta in await DownloadService.todasLasRutas(himnario))
           (himnario, ruta),
     ];
-    final List<bool> guardadas = await Future.wait(
-      hojas.map((hoja) => RedWeb.estaGuardado(RedWeb.urlDeAsset(hoja.$2))),
-    );
+    final List<bool> guardadas = await RedWeb.estanGuardadas([
+      for (final (_, String ruta) in hojas) RedWeb.urlDeAsset(ruta),
+    ]);
     final int faltantes = guardadas.where((guardada) => !guardada).length;
     if (faltantes > 0) return faltantes;
 
@@ -195,15 +195,20 @@ class RespaldoService {
           if (datos == null) {
             danadas++;
           } else {
-            await RedWeb.guardar(
-              RedWeb.urlDeAsset(rutaPorClave[himnario]![clave]!),
-              datos,
-              'image/webp',
-            );
-            restauradas.putIfAbsent(himnario, () => {})[clave] = HojaVersion(
-              await RedWeb.huellaDe(datos),
-              datos.length,
-            );
+            // Si no se puede guardar (por ejemplo, el dispositivo se quedó sin
+            // espacio) se sigue con las demás: al final se cuenta como
+            // faltante, y la copia que hubiera sigue igual que su registro.
+            try {
+              await RedWeb.guardar(
+                RedWeb.urlDeAsset(rutaPorClave[himnario]![clave]!),
+                datos,
+                'image/webp',
+              );
+              restauradas.putIfAbsent(himnario, () => {})[clave] = HojaVersion(
+                await RedWeb.huellaDe(datos),
+                datos.length,
+              );
+            } catch (_) {}
           }
           hechas++;
           onProgreso(hechas, pendientes.length);
@@ -225,11 +230,9 @@ class RespaldoService {
           ...?restauradas[himnario],
         }),
       );
-      final List<bool> guardadas = await Future.wait(
-        grupo.value.values.map(
-          (ruta) => RedWeb.estaGuardado(RedWeb.urlDeAsset(ruta)),
-        ),
-      );
+      final List<bool> guardadas = await RedWeb.estanGuardadas([
+        for (final String ruta in grupo.value.values) RedWeb.urlDeAsset(ruta),
+      ]);
       final int faltan = guardadas.where((guardada) => !guardada).length;
       if (faltan == 0) await DownloadService.marcarDescargaCompleta(himnario);
       faltantes += faltan;

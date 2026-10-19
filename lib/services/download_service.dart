@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/himnario.dart';
-import '../models/himno.dart';
 import 'red_web.dart';
 
 /// Hojas de un himnario: la ruta de cada página de cada himno, y todas las
@@ -81,7 +80,8 @@ class DownloadService {
           final bool alDia =
               publicada != null &&
               await RedWeb.huellaGuardada(url) == publicada;
-          if (!alDia && !await RedWeb.descargarVersionNueva(url)) {
+          if (!alDia &&
+              !await RedWeb.descargarVersionNueva(url, huella: publicada)) {
             fallidas++;
             debugPrint('No se pudo descargar $ruta');
           }
@@ -94,21 +94,32 @@ class DownloadService {
     if (fallidas > 0) return fallidas;
     // Solo cuenta como descargado si todas las hojas quedaron guardadas en el
     // dispositivo (sin HTTPS, por ejemplo, el navegador no deja guardar nada).
-    final List<bool> guardadas = await Future.wait(
-      rutas.map((ruta) => RedWeb.estaGuardado(RedWeb.urlDeAsset(ruta))),
-    );
+    final List<bool> guardadas = await RedWeb.estanGuardadas([
+      for (final String ruta in rutas) RedWeb.urlDeAsset(ruta),
+    ]);
     final int sinGuardar = guardadas.where((guardada) => !guardada).length;
     if (sinGuardar == 0) await marcarDescargaCompleta(himnario);
     return sinGuardar;
   }
 
-  /// Rutas de las páginas del himno, en orden.
-  static Future<List<String>> paginasDe(Himnario himnario, Himno himno) async =>
-      (await _leer(himnario)).porHimno[himno.numero] ?? const [];
-
-  /// Rutas de todas las hojas del himnario, cada una una sola vez.
+  /// Rutas de todas las hojas del himnario, cada una una sola vez y en orden,
+  /// como en el libro.
   static Future<List<String>> todasLasRutas(Himnario himnario) async =>
       (await _leer(himnario)).todas;
+
+  /// Rutas de las páginas de cada himno, por número.
+  static Future<Map<int, List<String>>> paginasPorHimno(
+    Himnario himnario,
+  ) async => (await _leer(himnario)).porHimno;
+
+  /// Himno y página con que se nombra la hoja: "2-2_3-1" es la página 2 del
+  /// himno 2 (y también la 1 del 3).
+  static (int, int) lugarDe(Himnario himnario, String ruta) {
+    final RegExpMatch parte = _parte.firstMatch(
+      claveDe(himnario, ruta).split('_').first,
+    )!;
+    return (int.parse(parte[1]!), int.parse(parte[2]!));
+  }
 
   static Future<_Hojas> _leer(Himnario himnario) async {
     final Future<_Hojas> lectura = _hojas[himnario.id] ??= _leerManifiesto(

@@ -164,9 +164,15 @@ class ActualizacionService {
       for (final MapEntry<String, HojaVersion> hoja in remoto.hojas.entries)
         if (local.hojas[hoja.key]?.hash != hoja.value.hash) hoja.key,
     };
+    // Las que esta versión de la app todavía usa no se borran aunque ya no
+    // estén publicadas: la app abierta puede ser anterior a la publicación.
+    final Set<String> enUso = {
+      for (final String ruta in await DownloadService.todasLasRutas(himnario))
+        DownloadService.claveDe(himnario, ruta),
+    };
     final List<String> eliminadas = [
       for (final String clave in local.hojas.keys)
-        if (!remoto.hojas.containsKey(clave)) clave,
+        if (!remoto.hojas.containsKey(clave) && !enUso.contains(clave)) clave,
     ];
 
     if (!await DownloadService.estaDescargado(himnario)) {
@@ -182,9 +188,9 @@ class ActualizacionService {
       for (final String clave in remoto.hojas.keys)
         if (!cambiadas.contains(clave)) clave,
     ];
-    final List<bool> guardadas = await Future.wait(
-      revisadas.map((clave) => RedWeb.estaGuardado(_url(himnario, clave))),
-    );
+    final List<bool> guardadas = await RedWeb.estanGuardadas([
+      for (final String clave in revisadas) _url(himnario, clave),
+    ]);
     final List<String> faltantes = [
       for (int i = 0; i < revisadas.length; i++)
         if (!guardadas[i]) revisadas[i],
@@ -224,6 +230,7 @@ class ActualizacionService {
         hojas.skip(i).take(tanda).map((clave) async {
           if (await RedWeb.descargarVersionNueva(
             _url(pendiente.himnario, clave),
+            huella: pendiente.remoto.hojas[clave]!.hash,
           )) {
             descargadas[clave] = pendiente.remoto.hojas[clave]!;
           } else {
@@ -247,7 +254,7 @@ class ActualizacionService {
   }
 
   static Future<void> _borrar(Himnario himnario, Iterable<String> claves) =>
-      Future.wait(
-        claves.map((clave) => RedWeb.borrarGuardado(_url(himnario, clave))),
-      );
+      RedWeb.borrarGuardados([
+        for (final String clave in claves) _url(himnario, clave),
+      ]);
 }
