@@ -212,6 +212,19 @@ class AyudaScreen extends StatelessWidget {
                     _Punto(
                       'Los títulos de los himnos que aparecen en las listas de búsqueda se obtuvieron de forma automática, por lo tanto algunos podrían llegar a contener errores.',
                     ),
+                    _Subtitulo('Aviso legal'),
+                    _Punto(
+                      'Esta app y los himnarios que contiene son para uso educativo o ministerial. No deben usarse fuera de ese contexto, ni venderse, reproducirse o publicarse.',
+                    ),
+                    _Punto(
+                      'Cada himnario debe descargarlo solo quien ya tiene su ejemplar: la descarga es una copia digital de su propio himnario físico, no un reemplazo de la compra.',
+                    ),
+                    _Punto(
+                      'Los himnos, letras, música, arreglos y el diseño de cada himnario siguen siendo propiedad de sus autores, editores y representantes legales.',
+                    ),
+                    _Punto(
+                      'El buen uso de la app y de los himnarios es responsabilidad de cada usuario.',
+                    ),
                   ],
                 ),
               ],
