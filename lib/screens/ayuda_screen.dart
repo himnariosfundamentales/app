@@ -31,14 +31,14 @@ class AyudaScreen extends StatelessWidget {
                     ),
                     _Punto('El Himnario Ministerio Musical viene incluido.'),
                     _Punto(
-                      'Los demás (Himnos Majestuosos, Himnos de Gracia) se descargan con su botón "Descargar". Antes se muestran los términos de uso: descárgalos solo si tienes ese himnario en físico.',
+                      'Los demás (Himnos Majestuosos, Himnos de Gracia, Celebremos su Gloria) se descargan con su botón "Descargar". Antes se muestran los términos de uso: descárgalos solo si tienes ese himnario en físico.',
                     ),
                     _Subtitulo('Buscar en todos'),
                     _Punto(
                       'El buscador de la pantalla principal busca por título en todos los himnarios.',
                     ),
                     _Punto(
-                      'Por número: 11 es el himno 11 del Ministerio Musical, M11 el de Himnos Majestuosos y G11 el de Himnos de Gracia.',
+                      'Por número: 11 es el himno 11 del Ministerio Musical, M11 el de Himnos Majestuosos, G11 el de Himnos de Gracia y C11 el de Celebremos su Gloria.',
                     ),
                     _Punto(
                       'Si eliges un himno de un himnario que no has descargado, primero te ofrece descargarlo.',
@@ -88,7 +88,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Subtitulo('Guardar respaldo'),
                     _Punto(
-                      'Crea un archivo con todos los himnarios descargados (himnarios-fecha.zip; con los tres himnarios pesa cerca de 120 MB) sin usar internet.',
+                      'Crea un archivo con todos los himnarios descargados (himnarios-fecha.zip; con los cuatro himnarios pesa cerca de 190 MB) sin usar internet.',
                     ),
                     _Punto(
                       'En Android queda en la carpeta Descargas; en iPad eliges dónde guardarlo, por ejemplo en Archivos.',
@@ -153,7 +153,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Subtitulo('Descargar un himnario'),
                     _Punto(
-                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB; mejor con Wi-Fi). Después funciona sin internet.',
+                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB; mejor con Wi-Fi). Después funciona sin internet.',
                     ),
                     _Subtitulo(
                       'Verificar descargas (menú ⋮ de la pantalla principal)',

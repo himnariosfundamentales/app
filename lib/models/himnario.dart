@@ -20,6 +20,12 @@ class Himnario {
 
   final List<Himno> himnos;
 
+  /// En modo libro, las hojas (por su clave, como "2-1") que llevan antes una
+  /// página en blanco, para que cada una quede del lado que tiene en el libro
+  /// impreso. Normalmente solo la primera, que va a la derecha como la
+  /// primera página de un libro; también donde se quitó una página suelta.
+  final Set<String> blancosAntes;
+
   Himnario({
     required this.id,
     required this.nombre,
@@ -27,6 +33,7 @@ class Himnario {
     required this.incluido,
     required this.color,
     required this.himnos,
+    this.blancosAntes = const {'1-1'},
   });
 
   String get carpeta => 'assets/himnarios/$id/';

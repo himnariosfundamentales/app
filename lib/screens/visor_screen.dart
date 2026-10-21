@@ -47,9 +47,10 @@ class _VisorScreenState extends State<VisorScreen> {
   ui.PointerDeviceKind? _ultimoPuntero;
 
   // Las hojas del himnario: las páginas de cada himno y todas en orden, como
-  // en el libro (cada una una vez). Null mientras se leen.
+  // en el libro (cada una una vez, con null en las páginas en blanco del modo
+  // libro). Null mientras se leen.
   Map<int, List<String>>? _paginasPorHimno;
-  List<String> _todas = const [];
+  List<String?> _libro = const [];
   int _paginaActual = 1;
   bool _errorCarga = false;
 
@@ -114,7 +115,15 @@ class _VisorScreenState extends State<VisorScreen> {
       if (!mounted) return;
       setState(() {
         _paginasPorHimno = porHimno;
-        _todas = todas;
+        _libro = [
+          for (final String ruta in todas) ...[
+            if (widget.himnario.blancosAntes.contains(
+              DownloadService.claveDe(widget.himnario, ruta),
+            ))
+              null,
+            ruta,
+          ],
+        ];
       });
       _cargarImagenes();
     } catch (e) {
@@ -208,18 +217,18 @@ class _VisorScreenState extends State<VisorScreen> {
         : rutas[(_paginaActual - 1).clamp(0, rutas.length - 1)];
   }
 
-  // En modo libro las hojas van de dos en dos como en el libro impreso: la
-  // primera va a la derecha, con una página en blanco a su izquierda, y si
-  // la última queda a la izquierda, a su derecha va otra en blanco. Así los
-  // himnos de dos hojas quedan juntos. En el libro, la posición 0 es esa
-  // página en blanco y la hoja i del himnario es la i + 1.
+  // En modo libro las hojas van de dos en dos como en el libro impreso, cada
+  // una de su lado: las posiciones pares van a la izquierda. Las páginas en
+  // blanco (ver Himnario.blancosAntes) acompañan a las que van solas, y si la
+  // última queda a la izquierda, a su derecha va otra en blanco. Así los
+  // himnos de dos hojas quedan juntos.
   String? _hojaEn(int posicion) =>
-      posicion >= 1 && posicion <= _todas.length ? _todas[posicion - 1] : null;
+      posicion >= 0 && posicion < _libro.length ? _libro[posicion] : null;
 
   // Posición de la izquierda del par donde está [ruta]; -1 si no está.
   int _parDe(String? ruta) {
-    final int i = ruta == null ? -1 : _todas.indexOf(ruta);
-    return i < 0 ? -1 : (i + 1) - (i + 1) % 2;
+    final int i = ruta == null ? -1 : _libro.indexOf(ruta);
+    return i < 0 ? -1 : i - i % 2;
   }
 
   // Lo que se ve, de izquierda a derecha: la página actual o, en modo libro,
@@ -380,10 +389,10 @@ class _VisorScreenState extends State<VisorScreen> {
     final int par = _parDe(_rutaActual);
     if (_enLibro && par >= 0) {
       final int destino = par + 2 * direccion;
-      if (destino < 0 || destino > _todas.length) return;
-      // La de la izquierda del par, o la primera hoja si ahí va la página
-      // en blanco.
-      _irAHoja(_hojaEn(destino) ?? _todas.first);
+      if (destino < 0 || destino >= _libro.length) return;
+      // La de la izquierda del par, o la de la derecha si a la izquierda va
+      // una página en blanco.
+      _irAHoja((_hojaEn(destino) ?? _hojaEn(destino + 1))!);
       return;
     }
     final int pagina = _paginaActual + direccion;
@@ -760,7 +769,7 @@ class _VisorScreenState extends State<VisorScreen> {
     final List<String?> visibles = _rutasVisibles;
     final bool hayAnterior = libro ? par > 0 : indice > 0 || _paginaActual > 1;
     final bool haySiguiente = libro
-        ? par + 2 <= _todas.length
+        ? par + 2 < _libro.length
         : (indice >= 0 && indice < _listaHimnos.length - 1) ||
               _paginaActual < _totalPaginas;
     final bool mostrarPaginas = _totalPaginas > 1;

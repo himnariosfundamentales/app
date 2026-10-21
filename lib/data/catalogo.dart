@@ -3,6 +3,7 @@ import 'dart:ui' show Color;
 import '../models/himnario.dart';
 import '../models/himno.dart';
 import 'busqueda.dart';
+import 'himnos_celebremos.dart';
 import 'himnos_gracia.dart';
 import 'himnos_majestuoso.dart';
 import 'himnos_ministerio.dart';
@@ -43,7 +44,35 @@ class Catalogo {
     himnos: himnosGracia,
   );
 
-  static final List<Himnario> todos = [ministerio, majestuoso, gracia];
+  static final Himnario celebremos = Himnario(
+    id: 'celebremos',
+    nombre: 'Celebremos su Gloria',
+    prefijo: 'C',
+    incluido: false,
+    color: const Color(0xFFB85C1E),
+    himnos: himnosCelebremos,
+    // La primera hoja va a la izquierda en el libro, y antes de estas había
+    // una portadilla de sección que no se incluyó.
+    blancosAntes: const {
+      '2-1',
+      '110-1',
+      '249-1',
+      '268-1_269-1',
+      '286-1',
+      '351-1',
+      '448-1',
+      '543-1',
+      '572-1',
+      '624-1_625-1',
+    },
+  );
+
+  static final List<Himnario> todos = [
+    ministerio,
+    majestuoso,
+    gracia,
+    celebremos,
+  ];
 
   static Himnario? porId(String id) {
     for (final Himnario himnario in todos) {
@@ -77,8 +106,7 @@ class Catalogo {
           ];
         }
       }
-      // Una letra que no es de ningún himnario ("C11" mientras no exista
-      // Celebremos su Gloria): no hay resultados.
+      // Una letra que no es de ningún himnario ("X11"): no hay resultados.
       if (letra.isNotEmpty) return const [];
     }
 

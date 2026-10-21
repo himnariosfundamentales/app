@@ -455,7 +455,7 @@ class _InicioScreenState extends State<InicioScreen> {
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Text(
-            'No se encontró ningún himno.\nUn número solo busca en el Ministerio Musical; con M en Himnos Majestuosos y con G en Himnos de Gracia.',
+            'No se encontró ningún himno.\nUn número solo busca en el Ministerio Musical; con M en Himnos Majestuosos, con G en Himnos de Gracia y con C en Celebremos su Gloria.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
           ),
