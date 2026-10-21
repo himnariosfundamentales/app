@@ -9,9 +9,17 @@ import '../services/terminos_service.dart';
 import 'progreso_ui.dart';
 import 'terminos_ui.dart';
 
-/// Descarga de un himnario desde la pantalla principal, con su diálogo de
-/// progreso. Si el himnario pide términos, los muestra antes.
+/// Descarga de un himnario, con su diálogo de progreso. Si el himnario pide
+/// términos, los muestra antes.
 class DescargaUi {
+  /// Antes de abrir un himnario desde un buscador: si pide términos y todavía
+  /// no se aceptaron, ofrece descargarlo. Devuelve si ya se puede abrir.
+  static Future<bool> paraAbrir(BuildContext context, Himnario himnario) async {
+    if (await TerminosService.aceptados(himnario)) return true;
+    if (!context.mounted) return false;
+    return descargar(context, himnario);
+  }
+
   /// Devuelve false si no se aceptaron los términos; true si se aceptaron
   /// (aunque la descarga haya quedado incompleta: el himnario se puede usar
   /// con internet y completar después).

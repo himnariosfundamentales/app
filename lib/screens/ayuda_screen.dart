@@ -190,7 +190,10 @@ class AyudaScreen extends StatelessWidget {
                       'Dentro de cada himnario busca por número o por título (no importan los acentos) y ordena la lista por número o por nombre.',
                     ),
                     _Punto(
-                      'Dentro de un himno, desliza a los lados o usa < > para pasar de hoja o de himno. El buscador de arriba abre cualquier otro.',
+                      'Ese buscador también encuentra los himnos de los otros himnarios, después de los del himnario en que estás. Ahí un número solo es de ese himnario; con letra (M11, G11, C11) es del otro.',
+                    ),
+                    _Punto(
+                      'Dentro de un himno, desliza a los lados o usa < > para pasar de hoja o de himno. El buscador de arriba abre cualquier otro, también de otro himnario.',
                     ),
                     _Punto('Junta o separa dos dedos para hacer zoom.'),
                     _Punto(

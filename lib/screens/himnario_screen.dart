@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import '../data/busqueda.dart';
+import '../data/catalogo.dart';
 import '../models/himnario.dart';
 import '../models/himno.dart';
+import '../services/terminos_service.dart';
+import 'descarga_ui.dart';
+import 'resultado_busqueda.dart';
 import 'visor_screen.dart';
 
 enum OrdenHimnos { numero, nombre }
 
-/// Lista de los himnos de un himnario, con su buscador.
+/// Lista de los himnos de un himnario, con su buscador. El buscador también
+/// encuentra los de los otros himnarios, después de los de este.
 class HimnarioScreen extends StatefulWidget {
   final Himnario himnario;
 
@@ -17,7 +21,8 @@ class HimnarioScreen extends StatefulWidget {
 }
 
 class _HimnarioScreenState extends State<HimnarioScreen> {
-  List<Himno> _himnosFiltrados = [];
+  List<HimnoEncontrado> _himnosFiltrados = [];
+  Set<Himnario> _aceptados = {};
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   OrdenHimnos _orden = OrdenHimnos.numero;
@@ -31,7 +36,38 @@ class _HimnarioScreenState extends State<HimnarioScreen> {
   @override
   void initState() {
     super.initState();
-    _himnosFiltrados = _himnosOrdenados;
+    _filtrarHimnos('');
+    _cargarAceptados();
+  }
+
+  Future<void> _cargarAceptados() async {
+    final Set<Himnario> aceptados = await TerminosService.aceptadosDe(
+      Catalogo.todos,
+    );
+    if (mounted) setState(() => _aceptados = aceptados);
+  }
+
+  Future<void> _abrir(HimnoEncontrado encontrado) async {
+    if (encontrado.himnario != _himnario) {
+      final bool aceptado = await DescargaUi.paraAbrir(
+        context,
+        encontrado.himnario,
+      );
+      await _cargarAceptados();
+      if (!aceptado) return;
+    }
+    if (!mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VisorScreen(
+          himnario: encontrado.himnario,
+          himnoActual: encontrado.himno,
+        ),
+      ),
+    );
+    // Desde el visor se pudo descargar otro himnario con su buscador.
+    await _cargarAceptados();
   }
 
   @override
@@ -49,10 +85,16 @@ class _HimnarioScreenState extends State<HimnarioScreen> {
 
   void _filtrarHimnos(String query) {
     setState(() {
-      _himnosFiltrados = buscarEn(
-        _himnario.quitarPrefijo(query),
-        _himnosOrdenados,
-      );
+      _himnosFiltrados = query.trim().isEmpty
+          ? [
+              for (final Himno himno in _himnosOrdenados)
+                HimnoEncontrado(_himnario, himno),
+            ]
+          : Catalogo.buscar(
+              query,
+              actual: _himnario,
+              porNumero: _orden == OrdenHimnos.numero,
+            );
     });
   }
 
@@ -118,25 +160,14 @@ class _HimnarioScreenState extends State<HimnarioScreen> {
               controller: _scrollController,
               itemCount: _himnosFiltrados.length,
               itemBuilder: (context, index) {
-                final himno = _himnosFiltrados[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: _himnario.color,
-                    foregroundColor: Colors.white,
-                    child: Text('${himno.numero}'),
-                  ),
-                  title: Text(himno.nombre),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => VisorScreen(
-                          himnario: _himnario,
-                          himnoActual: himno,
-                        ),
-                      ),
-                    );
-                  },
+                final HimnoEncontrado encontrado = _himnosFiltrados[index];
+                return ResultadoBusqueda(
+                  encontrado: encontrado,
+                  propio: encontrado.himnario == _himnario,
+                  aceptado:
+                      encontrado.himnario == _himnario ||
+                      _aceptados.contains(encontrado.himnario),
+                  onTap: () => _abrir(encontrado),
                 );
               },
             ),

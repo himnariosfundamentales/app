@@ -16,6 +16,7 @@ import 'descarga_ui.dart';
 import 'himnario_screen.dart';
 import 'progreso_ui.dart';
 import 'respaldo_ui.dart';
+import 'resultado_busqueda.dart';
 import 'visor_screen.dart';
 
 /// Si un himnario se puede usar en este dispositivo y si ya funciona sin
@@ -118,6 +119,8 @@ class _InicioScreenState extends State<InicioScreen> {
             : VisorScreen(himnario: himnario, himnoActual: himno),
       ),
     );
+    // Adentro se pudo descargar otro himnario desde su buscador.
+    await _cargarEstados();
   }
 
   Future<void> _descargar(Himnario himnario) async {
@@ -466,25 +469,9 @@ class _InicioScreenState extends State<InicioScreen> {
       itemCount: _resultados.length,
       itemBuilder: (context, index) {
         final HimnoEncontrado encontrado = _resultados[index];
-        final bool aceptado = _estados[encontrado.himnario]?.aceptado ?? false;
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: encontrado.himnario.color,
-            foregroundColor: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: FittedBox(
-                child: Text(
-                  encontrado.himnario.etiqueta(encontrado.himno.numero),
-                ),
-              ),
-            ),
-          ),
-          title: Text(encontrado.himno.nombre),
-          subtitle: Text(encontrado.himnario.nombre),
-          trailing: aceptado
-              ? null
-              : const Icon(Icons.download, color: Colors.grey),
+        return ResultadoBusqueda(
+          encontrado: encontrado,
+          aceptado: _estados[encontrado.himnario]?.aceptado ?? false,
           onTap: () => _abrir(encontrado.himnario, encontrado.himno),
         );
       },

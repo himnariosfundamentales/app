@@ -4,10 +4,13 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../data/busqueda.dart';
+import '../data/catalogo.dart';
 import '../models/himnario.dart';
 import '../models/himno.dart';
 import '../services/download_service.dart';
+import '../services/terminos_service.dart';
+import 'descarga_ui.dart';
+import 'resultado_busqueda.dart';
 
 class VisorScreen extends StatefulWidget {
   final Himnario himnario;
@@ -44,6 +47,9 @@ class _VisorScreenState extends State<VisorScreen> {
   final TransformationController _transformacion = TransformationController();
   final SearchController _buscador = SearchController();
   bool? _busquedaPantallaCompleta;
+  // Los himnarios que ya se pueden abrir, para marcar en el buscador los que
+  // todavía hay que descargar.
+  Set<Himnario> _aceptados = {};
   ui.PointerDeviceKind? _ultimoPuntero;
 
   // Las hojas del himnario: las páginas de cada himno y todas en orden, como
@@ -103,6 +109,9 @@ class _VisorScreenState extends State<VisorScreen> {
       _cargarImagenes();
     });
     _leerHojas();
+    TerminosService.aceptadosDe(Catalogo.todos).then((aceptados) {
+      if (mounted) setState(() => _aceptados = aceptados);
+    });
   }
 
   Future<void> _leerHojas() async {
@@ -521,15 +530,30 @@ class _VisorScreenState extends State<VisorScreen> {
     }
   }
 
-  List<Himno> _sugerencias(String texto) {
-    if (texto.trim().isEmpty) return const [];
-    return buscarEn(widget.himnario.quitarPrefijo(texto), _listaHimnos);
-  }
+  // Los de este himnario primero y después los de los otros.
+  List<HimnoEncontrado> _sugerencias(String texto) =>
+      Catalogo.buscar(texto, actual: widget.himnario);
 
-  void _irAlHimnoBuscado(Himno himno) {
+  Future<void> _irAlHimnoBuscado(HimnoEncontrado encontrado) async {
     _buscador.closeView('');
     FocusManager.instance.primaryFocus?.unfocus();
-    _abrirHimno(himno);
+    if (encontrado.himnario == widget.himnario) {
+      _abrirHimno(encontrado.himno);
+      return;
+    }
+    // El de otro himnario se abre en su lugar, como al buscar uno de este.
+    if (!await DescargaUi.paraAbrir(context, encontrado.himnario) || !mounted) {
+      return;
+    }
+    await Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VisorScreen(
+          himnario: encontrado.himnario,
+          himnoActual: encontrado.himno,
+        ),
+      ),
+    );
   }
 
   // Chrome en tablets grandes abre los sitios en modo escritorio, así que
@@ -561,7 +585,7 @@ class _VisorScreenState extends State<VisorScreen> {
       viewBackgroundColor: Colors.white,
       viewSurfaceTintColor: Colors.transparent,
       viewOnSubmitted: (texto) {
-        final List<Himno> resultados = _sugerencias(texto);
+        final List<HimnoEncontrado> resultados = _sugerencias(texto);
         if (resultados.isNotEmpty) _irAlHimnoBuscado(resultados.first);
       },
       builder: (context, controller) => Listener(
@@ -585,14 +609,13 @@ class _VisorScreenState extends State<VisorScreen> {
       ),
       suggestionsBuilder: (context, controller) =>
           _sugerencias(controller.text).map(
-            (himno) => ListTile(
-              leading: CircleAvatar(
-                backgroundColor: widget.himnario.color,
-                foregroundColor: Colors.white,
-                child: Text('${himno.numero}'),
-              ),
-              title: Text(himno.nombre),
-              onTap: () => _irAlHimnoBuscado(himno),
+            (encontrado) => ResultadoBusqueda(
+              encontrado: encontrado,
+              propio: encontrado.himnario == widget.himnario,
+              aceptado:
+                  encontrado.himnario == widget.himnario ||
+                  _aceptados.contains(encontrado.himnario),
+              onTap: () => _irAlHimnoBuscado(encontrado),
             ),
           ),
     );

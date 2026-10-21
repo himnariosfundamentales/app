@@ -86,34 +86,58 @@ class Catalogo {
 
   /// Búsqueda en todos los himnarios. Un número solo busca en el principal y
   /// con letra en ese himnario ("M11" es el 11 de Himnos Majestuosos); un
-  /// texto busca en los títulos de todos.
-  static List<HimnoEncontrado> buscar(String texto) {
+  /// texto busca en los títulos de todos, ordenados por nombre o, con
+  /// [porNumero], por número.
+  ///
+  /// Dentro de un himnario ([actual]) sus himnos van primero, y un número
+  /// solo es primero uno de los suyos.
+  static List<HimnoEncontrado> buscar(
+    String texto, {
+    Himnario? actual,
+    bool porNumero = false,
+  }) {
     final String consulta = texto.trim();
     if (consulta.isEmpty) return const [];
 
     final RegExpMatch? numero = _numeroConLetra.firstMatch(consulta);
+    final List<HimnoEncontrado> encontrados;
     if (numero != null) {
       final String letra = numero[1]!.toUpperCase();
-      for (final Himnario himnario in todos) {
-        if (himnario.prefijo == letra) {
-          return [
-            for (final Himno himno in buscarEn(
-              numero[2]!,
-              himnario.himnosPorNumero,
-            ))
-              if (himno.numero.toString().contains(numero[2]!))
-                HimnoEncontrado(himnario, himno),
-          ];
-        }
-      }
       // Una letra que no es de ningún himnario ("X11"): no hay resultados.
-      if (letra.isNotEmpty) return const [];
+      encontrados = [
+        for (final Himnario himnario in todos)
+          if (himnario.prefijo == letra) ..._porNumero(himnario, numero[2]!),
+      ];
+    } else {
+      encontrados = [
+        for (final Himnario himnario in todos)
+          for (final Himno himno in buscarEn(
+            consulta,
+            porNumero ? himnario.himnosPorNumero : himnario.himnosPorNombre,
+          ))
+            HimnoEncontrado(himnario, himno),
+      ];
     }
+    if (actual == null) return encontrados;
 
+    final List<HimnoEncontrado> propios = numero != null && numero[1]!.isEmpty
+        ? _porNumero(actual, numero[2]!)
+        : [
+            for (final HimnoEncontrado encontrado in encontrados)
+              if (encontrado.himnario == actual) encontrado,
+          ];
     return [
-      for (final Himnario himnario in todos)
-        for (final Himno himno in buscarEn(consulta, himnario.himnosPorNombre))
-          HimnoEncontrado(himnario, himno),
+      ...propios,
+      for (final HimnoEncontrado encontrado in encontrados)
+        if (encontrado.himnario != actual) encontrado,
     ];
   }
+
+  // Los de [himnario] cuyo número contiene [digitos], el exacto primero.
+  static List<HimnoEncontrado> _porNumero(Himnario himnario, String digitos) =>
+      [
+        for (final Himno himno in buscarEn(digitos, himnario.himnosPorNumero))
+          if (himno.numero.toString().contains(digitos))
+            HimnoEncontrado(himnario, himno),
+      ];
 }
