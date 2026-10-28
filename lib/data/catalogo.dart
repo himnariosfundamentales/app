@@ -3,6 +3,7 @@ import 'dart:ui' show Color;
 import '../models/himnario.dart';
 import '../models/himno.dart';
 import 'busqueda.dart';
+import 'himnos_bautista.dart';
 import 'himnos_celebremos.dart';
 import 'himnos_gracia.dart';
 import 'himnos_majestuoso.dart';
@@ -67,11 +68,21 @@ class Catalogo {
     },
   );
 
+  static final Himnario bautista = Himnario(
+    id: 'bautista',
+    nombre: 'Himnario Bautista',
+    prefijo: 'B',
+    incluido: false,
+    color: const Color(0xFFB2382D),
+    himnos: himnosBautista,
+  );
+
   static final List<Himnario> todos = [
     ministerio,
     majestuoso,
     gracia,
     celebremos,
+    bautista,
   ];
 
   static Himnario? porId(String id) {

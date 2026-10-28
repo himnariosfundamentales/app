@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../data/catalogo.dart';
 
-/// Un himno en la lista de un buscador. Los de otro himnario llevan su letra
-/// ("M11"), el nombre del himnario y, si todavía no se puede abrir, el ícono
-/// de descarga.
+/// Un himno en la lista de un buscador, con el nombre de su himnario debajo.
+/// Los de otro himnario llevan su letra ("M11") y, si todavía no se pueden
+/// abrir, el ícono de descarga.
 class ResultadoBusqueda extends StatelessWidget {
   final HimnoEncontrado encontrado;
 
   /// Es del himnario en que se busca: va solo con su número.
   final bool propio;
   final bool aceptado;
+
+  /// Sin búsqueda, en la lista de un solo himnario, el nombre sobra.
+  final bool conHimnario;
   final VoidCallback onTap;
 
   const ResultadoBusqueda({
@@ -17,6 +20,7 @@ class ResultadoBusqueda extends StatelessWidget {
     required this.encontrado,
     this.propio = false,
     this.aceptado = true,
+    this.conHimnario = true,
     required this.onTap,
   });
 
@@ -36,7 +40,7 @@ class ResultadoBusqueda extends StatelessWidget {
               ),
       ),
       title: Text(himno.nombre),
-      subtitle: propio ? null : Text(himnario.nombre),
+      subtitle: conHimnario ? Text(himnario.nombre) : null,
       trailing: aceptado
           ? null
           : const Icon(Icons.download, color: Colors.grey),

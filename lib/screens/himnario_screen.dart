@@ -167,6 +167,7 @@ class _HimnarioScreenState extends State<HimnarioScreen> {
                   aceptado:
                       encontrado.himnario == _himnario ||
                       _aceptados.contains(encontrado.himnario),
+                  conHimnario: _searchController.text.trim().isNotEmpty,
                   onTap: () => _abrir(encontrado),
                 );
               },
