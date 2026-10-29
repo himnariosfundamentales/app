@@ -713,25 +713,33 @@ class _VisorScreenState extends State<VisorScreen> {
           maxScale: _zoomMaximo,
           child: SizedBox(
             width: vista.width,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: vista.height),
-              child: Center(
+            child: Center(
+              // Entre las barras todo es blanco como el papel: arriba y abajo
+              // de la hoja y en las páginas en blanco.
+              child: ColoredBox(
+                color: Colors.white,
                 child: SizedBox(
                   width: ancho,
-                  height: altoPagina,
-                  child: Row(
-                    children: [
-                      for (final ui.Image? hoja in hojas)
-                        Expanded(
-                          child: hoja == null
-                              ? const ColoredBox(color: Colors.white)
-                              : RawImage(
-                                  image: hoja,
-                                  fit: BoxFit.fill,
-                                  filterQuality: FilterQuality.medium,
-                                ),
-                        ),
-                    ],
+                  height: math.max(vista.height, altoPagina),
+                  child: Center(
+                    child: SizedBox(
+                      width: ancho,
+                      height: altoPagina,
+                      child: Row(
+                        children: [
+                          for (final ui.Image? hoja in hojas)
+                            Expanded(
+                              child: hoja == null
+                                  ? const SizedBox()
+                                  : RawImage(
+                                      image: hoja,
+                                      fit: BoxFit.fill,
+                                      filterQuality: FilterQuality.medium,
+                                    ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
