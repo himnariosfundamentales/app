@@ -83,7 +83,7 @@ class Catalogo {
     nombre: 'El Nuevo Himnario Popular',
     prefijo: 'P',
     incluido: false,
-    color: const Color(0xFF1C4297),
+    color: const Color(0xFF153273),
     himnos: himnosPopular,
   );
 
@@ -106,13 +106,14 @@ class Catalogo {
   // Número solo ("11") o con la letra de un himnario ("M11", "g 11").
   static final RegExp _numeroConLetra = RegExp(r'^([a-zA-Z]?)\s*(\d+)$');
 
-  /// Búsqueda en todos los himnarios. Un número solo busca en el principal y
-  /// con letra en ese himnario ("M11" es el 11 de Himnos Majestuosos); un
+  /// Búsqueda en todos los himnarios. Un número solo busca en todos y con
+  /// letra solo en ese himnario ("M11" es el 11 de Himnos Majestuosos); los
+  /// exactos van primero (el 11, M11, G11... antes que el 110 o el 211). Un
   /// texto busca en los títulos de todos, ordenados por nombre o, con
   /// [porNumero], por número.
   ///
-  /// Dentro de un himnario ([actual]) sus himnos van primero, y un número
-  /// solo es primero uno de los suyos.
+  /// Dentro de un himnario ([actual]) sus himnos van primero; con un número,
+  /// primero entre los exactos y luego entre los demás.
   static List<HimnoEncontrado> buscar(
     String texto, {
     Himnario? actual,
@@ -122,38 +123,45 @@ class Catalogo {
     if (consulta.isEmpty) return const [];
 
     final RegExpMatch? numero = _numeroConLetra.firstMatch(consulta);
-    final List<HimnoEncontrado> encontrados;
-    if (numero != null) {
-      final String letra = numero[1]!.toUpperCase();
-      // Una letra que no es de ningún himnario ("X11"): no hay resultados.
-      encontrados = [
-        for (final Himnario himnario in todos)
-          if (himnario.prefijo == letra) ..._porNumero(himnario, numero[2]!),
-      ];
-    } else {
-      encontrados = [
+    if (numero == null) {
+      return _suyosPrimero([
         for (final Himnario himnario in todos)
           for (final Himno himno in buscarEn(
             consulta,
             porNumero ? himnario.himnosPorNumero : himnario.himnosPorNombre,
           ))
             HimnoEncontrado(himnario, himno),
-      ];
+      ], actual);
     }
-    if (actual == null) return encontrados;
 
-    final List<HimnoEncontrado> propios = numero != null && numero[1]!.isEmpty
-        ? _porNumero(actual, numero[2]!)
-        : [
-            for (final HimnoEncontrado encontrado in encontrados)
-              if (encontrado.himnario == actual) encontrado,
-          ];
+    final String letra = numero[1]!.toUpperCase();
+    // Una letra que no es de ningún himnario ("X11"): no hay resultados.
+    final List<HimnoEncontrado> encontrados = [
+      for (final Himnario himnario in todos)
+        if (letra.isEmpty || himnario.prefijo == letra)
+          ..._porNumero(himnario, numero[2]!),
+    ];
+    final int? exacto = int.tryParse(numero[2]!);
     return [
-      ...propios,
-      for (final HimnoEncontrado encontrado in encontrados)
-        if (encontrado.himnario != actual) encontrado,
+      ..._suyosPrimero(
+        encontrados.where((encontrado) => encontrado.himno.numero == exacto),
+        actual,
+      ),
+      ..._suyosPrimero(
+        encontrados.where((encontrado) => encontrado.himno.numero != exacto),
+        actual,
+      ),
     ];
   }
+
+  // Los de [actual] primero; sin él, en el orden en que vienen.
+  static List<HimnoEncontrado> _suyosPrimero(
+    Iterable<HimnoEncontrado> lista,
+    Himnario? actual,
+  ) => [
+    ...lista.where((encontrado) => encontrado.himnario == actual),
+    ...lista.where((encontrado) => encontrado.himnario != actual),
+  ];
 
   // Los de [himnario] cuyo número contiene [digitos], el exacto primero.
   static List<HimnoEncontrado> _porNumero(Himnario himnario, String digitos) =>
