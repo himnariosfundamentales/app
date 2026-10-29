@@ -31,14 +31,14 @@ class AyudaScreen extends StatelessWidget {
                     ),
                     _Punto('El Himnario Ministerio Musical viene incluido.'),
                     _Punto(
-                      'Los demás (Himnos Majestuosos, Himnos de Gracia, Celebremos su Gloria, Himnario Bautista) se descargan con su botón "Descargar". Antes se muestran los términos de uso: descárgalos solo si tienes ese himnario en físico.',
+                      'Los demás (Himnos Majestuosos, Himnos de Gracia, Celebremos su Gloria, Himnario Bautista, El Nuevo Himnario Popular) se descargan con su botón "Descargar". Antes se muestran los términos de uso: descárgalos solo si tienes ese himnario en físico.',
                     ),
                     _Subtitulo('Buscar en todos'),
                     _Punto(
                       'El buscador de la pantalla principal busca por título en todos los himnarios.',
                     ),
                     _Punto(
-                      'Por número: 11 es el himno 11 del Ministerio Musical, M11 el de Himnos Majestuosos, G11 el de Himnos de Gracia, C11 el de Celebremos su Gloria y B11 el del Himnario Bautista.',
+                      'Por número: 11 es el himno 11 del Ministerio Musical, M11 el de Himnos Majestuosos, G11 el de Himnos de Gracia, C11 el de Celebremos su Gloria, B11 el del Himnario Bautista y P11 el de El Nuevo Himnario Popular.',
                     ),
                     _Punto(
                       'Si eliges un himno de un himnario que no has descargado, primero te ofrece descargarlo.',
@@ -88,7 +88,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Subtitulo('Guardar respaldo'),
                     _Punto(
-                      'Crea un archivo con todos los himnarios descargados (himnarios-fecha.zip; con los cinco himnarios pesa cerca de 245 MB) sin usar internet.',
+                      'Crea un archivo con todos los himnarios descargados (himnarios-fecha.zip; con los seis himnarios pesa cerca de 290 MB) sin usar internet.',
                     ),
                     _Punto(
                       'En Android queda en la carpeta Descargas; en iPad eliges dónde guardarlo, por ejemplo en Archivos.',
@@ -153,7 +153,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Subtitulo('Descargar un himnario'),
                     _Punto(
-                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB, Himnario Bautista 56 MB; mejor con Wi-Fi). Después funciona sin internet.',
+                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB, Himnario Bautista 56 MB, El Nuevo Himnario Popular 46 MB; mejor con Wi-Fi). Después funciona sin internet.',
                     ),
                     _Subtitulo(
                       'Verificar descargas (menú ⋮ de la pantalla principal)',
@@ -190,7 +190,7 @@ class AyudaScreen extends StatelessWidget {
                       'Dentro de cada himnario busca por número o por título (no importan los acentos) y ordena la lista por número o por nombre.',
                     ),
                     _Punto(
-                      'Ese buscador también encuentra los himnos de los otros himnarios, después de los del himnario en que estás. Ahí un número solo es de ese himnario; con letra (M11, G11, C11, B11) es del otro.',
+                      'Ese buscador también encuentra los himnos de los otros himnarios, después de los del himnario en que estás. Ahí un número solo es de ese himnario; con letra (M11, G11, C11, B11, P11) es del otro.',
                     ),
                     _Punto(
                       'Dentro de un himno, desliza a los lados o usa < > para pasar de hoja o de himno. El buscador de arriba abre cualquier otro, también de otro himnario.',

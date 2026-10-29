@@ -8,6 +8,7 @@ import 'himnos_celebremos.dart';
 import 'himnos_gracia.dart';
 import 'himnos_majestuoso.dart';
 import 'himnos_ministerio.dart';
+import 'himnos_popular.dart';
 
 /// Un himno junto con el himnario al que pertenece.
 class HimnoEncontrado {
@@ -77,12 +78,22 @@ class Catalogo {
     himnos: himnosBautista,
   );
 
+  static final Himnario popular = Himnario(
+    id: 'popular',
+    nombre: 'El Nuevo Himnario Popular',
+    prefijo: 'P',
+    incluido: false,
+    color: const Color(0xFF1C4297),
+    himnos: himnosPopular,
+  );
+
   static final List<Himnario> todos = [
     ministerio,
     majestuoso,
     gracia,
     celebremos,
     bautista,
+    popular,
   ];
 
   static Himnario? porId(String id) {

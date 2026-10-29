@@ -7,7 +7,7 @@ import 'red_web.dart';
 /// segundo plano, que no vuelve a cargar su código por sí sola.
 class VersionAppService {
   /// La que se muestra al final de la Ayuda.
-  static const String version = '1.3.0';
+  static const String version = '1.4.0';
 
   static const String _despliegue = String.fromEnvironment('DESPLIEGUE');
 
