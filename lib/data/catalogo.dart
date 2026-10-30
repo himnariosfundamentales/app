@@ -34,7 +34,7 @@ class Catalogo {
     nombre: 'Himnario Navideño Bautista',
     prefijo: 'N',
     incluido: true,
-    color: const Color(0xFF0B2C0E),
+    color: const Color(0xFF16471B),
     himnos: himnosNavidenno,
   );
 
