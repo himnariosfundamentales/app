@@ -228,6 +228,9 @@ class AyudaScreen extends StatelessWidget {
                     _Punto(
                       'El buen uso de la app y de los himnarios es responsabilidad de cada usuario.',
                     ),
+                    _Punto(
+                      '¿Tiene algún problema con nuestra app? Contáctenos a nuestro correo y con gusto lo atenderemos: himnariosfundamentales@gmail.com',
+                    ),
                   ],
                 ),
               ],
