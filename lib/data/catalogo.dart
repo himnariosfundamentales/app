@@ -8,6 +8,7 @@ import 'himnos_celebremos.dart';
 import 'himnos_gracia.dart';
 import 'himnos_majestuoso.dart';
 import 'himnos_ministerio.dart';
+import 'himnos_navidenno.dart';
 import 'himnos_popular.dart';
 
 /// Un himno junto con el himnario al que pertenece.
@@ -26,6 +27,15 @@ class Catalogo {
     incluido: true,
     color: const Color(0xFF0175C2),
     himnos: himnosMinisterio,
+  );
+
+  static final Himnario navidenno = Himnario(
+    id: 'navidenno',
+    nombre: 'Himnario Navideño Bautista',
+    prefijo: 'N',
+    incluido: true,
+    color: const Color(0xFF0B2C0E),
+    himnos: himnosNavidenno,
   );
 
   static final Himnario majestuoso = Himnario(
@@ -89,6 +99,7 @@ class Catalogo {
 
   static final List<Himnario> todos = [
     ministerio,
+    navidenno,
     majestuoso,
     gracia,
     celebremos,

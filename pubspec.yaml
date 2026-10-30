@@ -61,6 +61,7 @@ flutter:
 
   assets:
     - assets/himnarios/ministerio/
+    - assets/himnarios/navidenno/
     - assets/himnarios/majestuoso/
     - assets/himnarios/gracia/
     - assets/himnarios/celebremos/
