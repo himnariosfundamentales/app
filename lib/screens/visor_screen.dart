@@ -530,9 +530,14 @@ class _VisorScreenState extends State<VisorScreen> {
     }
   }
 
-  // Los de este himnario primero y después los de los otros.
-  List<HimnoEncontrado> _sugerencias(String texto) =>
-      Catalogo.buscar(texto, actual: widget.himnario);
+  // Sin texto, la lista de este himnario; con texto, los de este himnario
+  // primero y después los de los otros.
+  List<HimnoEncontrado> _sugerencias(String texto) => texto.trim().isEmpty
+      ? [
+          for (final Himno himno in widget.himnario.himnosPorNumero)
+            HimnoEncontrado(widget.himnario, himno),
+        ]
+      : Catalogo.buscar(texto, actual: widget.himnario);
 
   Future<void> _irAlHimnoBuscado(HimnoEncontrado encontrado) async {
     _buscador.closeView('');
@@ -585,7 +590,10 @@ class _VisorScreenState extends State<VisorScreen> {
       viewBackgroundColor: Colors.white,
       viewSurfaceTintColor: Colors.transparent,
       viewOnSubmitted: (texto) {
-        final List<HimnoEncontrado> resultados = _sugerencias(texto);
+        final List<HimnoEncontrado> resultados = Catalogo.buscar(
+          texto,
+          actual: widget.himnario,
+        );
         if (resultados.isNotEmpty) _irAlHimnoBuscado(resultados.first);
       },
       builder: (context, controller) => Listener(
@@ -615,6 +623,7 @@ class _VisorScreenState extends State<VisorScreen> {
               aceptado:
                   encontrado.himnario == widget.himnario ||
                   _aceptados.contains(encontrado.himnario),
+              conHimnario: controller.text.trim().isNotEmpty,
               onTap: () => _irAlHimnoBuscado(encontrado),
             ),
           ),
