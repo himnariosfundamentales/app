@@ -15,7 +15,7 @@ final List<Himno> himnosNavidenno = [
   Himno(nombre: "Cristo ha nacido", numero: 10),
   Himno(nombre: "Dime la historia de Cristo", numero: 11),
   Himno(nombre: "Gloria a Dios en las alturas", numero: 12),
-  Himno(nombre: "Que Dios los bendiga, caballeros (God Rest You Merry, Gentlemen)", numero: 13),
+  Himno(nombre: "Dios os bendiga y dé su paz", numero: 13),
   Himno(nombre: "La noticia sin igual", numero: 14),
   Himno(nombre: "Noche de paz", numero: 15),
   Himno(nombre: "Oh niños, venid", numero: 16),
