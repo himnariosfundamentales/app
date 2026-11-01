@@ -111,12 +111,12 @@ class Catalogo {
   static final List<Himnario> todos = [
     ministerio,
     navidenno,
-    navidennoSib,
     majestuoso,
     gracia,
     celebremos,
     bautista,
     popular,
+    navidennoSib,
   ];
 
   static Himnario? porId(String id) {
