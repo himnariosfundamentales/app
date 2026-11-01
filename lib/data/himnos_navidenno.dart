@@ -23,7 +23,7 @@ final List<Himno> himnosNavidenno = [
   Himno(nombre: "Oh santísimo, felicísimo", numero: 18),
   Himno(nombre: "Oh ven, bendito Emanuel", numero: 19),
   Himno(nombre: "Oíd un son en alta esfera", numero: 20),
-  Himno(nombre: "Érase una vez en la ciudad de David (Once in Royal David's City)", numero: 21),
+  Himno(nombre: "En Belén hubo un establo (Once in Royal David's City)", numero: 21),
   Himno(nombre: "Pastores cerca de Belén", numero: 22),
   Himno(nombre: "Suenen dulces himnos", numero: 23),
   Himno(nombre: "Santa la noche", numero: 24),
