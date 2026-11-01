@@ -31,7 +31,7 @@ class AyudaScreen extends StatelessWidget {
                     ),
                     _Punto('El Himnario Ministerio Musical viene incluido.'),
                     _Punto(
-                      'El Himnario Navideño Bautista se descarga con su botón "Descargar" y no pide términos de uso.',
+                      'El Himnario Navideño Bautista y su versión para trompeta (Himnario Navideño Bautista Si♭) se descargan con su botón "Descargar" y no piden términos de uso.',
                     ),
                     _Punto(
                       'Los demás (Himnos Majestuosos, Himnos de Gracia, Celebremos su Gloria, Himnario Bautista, El Nuevo Himnario Popular) se descargan con su botón "Descargar". Antes se muestran los términos de uso: descárgalos solo si tienes ese himnario en físico.',
@@ -41,7 +41,7 @@ class AyudaScreen extends StatelessWidget {
                       'El buscador de la pantalla principal busca por título en todos los himnarios.',
                     ),
                     _Punto(
-                      'Por número: 11 busca el himno 11 en todos los himnarios. Con letra busca solo en uno: N11 es el del Himnario Navideño Bautista, M11 el de Himnos Majestuosos, G11 el de Himnos de Gracia, C11 el de Celebremos su Gloria, B11 el del Himnario Bautista y P11 el de El Nuevo Himnario Popular.',
+                      'Por número: 11 busca el himno 11 en todos los himnarios. Con letra busca solo en uno: N11 es el del Himnario Navideño Bautista, T11 el del Himnario Navideño Bautista Si♭ (para trompeta), M11 el de Himnos Majestuosos, G11 el de Himnos de Gracia, C11 el de Celebremos su Gloria, B11 el del Himnario Bautista y P11 el de El Nuevo Himnario Popular.',
                     ),
                     _Punto(
                       'Si eliges un himno de un himnario que no has descargado, primero te ofrece descargarlo.',
@@ -156,7 +156,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Subtitulo('Descargar un himnario'),
                     _Punto(
-                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnario Navideño Bautista 7 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB, Himnario Bautista 58 MB, El Nuevo Himnario Popular 46 MB; mejor con Wi-Fi). Después funciona sin internet.',
+                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnario Navideño Bautista 7 MB, Himnario Navideño Bautista Si♭ 2 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB, Himnario Bautista 58 MB, El Nuevo Himnario Popular 46 MB; mejor con Wi-Fi). Después funciona sin internet.',
                     ),
                     _Subtitulo(
                       'Verificar descargas (menú ⋮ de la pantalla principal)',

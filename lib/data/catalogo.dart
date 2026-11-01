@@ -9,6 +9,7 @@ import 'himnos_gracia.dart';
 import 'himnos_majestuoso.dart';
 import 'himnos_ministerio.dart';
 import 'himnos_navidenno.dart';
+import 'himnos_navidenno_sib.dart';
 import 'himnos_popular.dart';
 
 /// Un himno junto con el himnario al que pertenece.
@@ -36,6 +37,16 @@ class Catalogo {
     incluido: true,
     color: const Color(0xFF16471B),
     himnos: himnosNavidenno,
+  );
+
+  /// El Navideño transportado para trompeta en Si♭.
+  static final Himnario navidennoSib = Himnario(
+    id: 'navidenno_sib',
+    nombre: 'Himnario Navideño Bautista Si♭',
+    prefijo: 'T',
+    incluido: true,
+    color: const Color(0xFF153273),
+    himnos: himnosNavidennoSib,
   );
 
   static final Himnario majestuoso = Himnario(
@@ -93,13 +104,14 @@ class Catalogo {
     nombre: 'El Nuevo Himnario Popular',
     prefijo: 'P',
     incluido: false,
-    color: const Color(0xFF153273),
+    color: const Color(0xFF358C4A),
     himnos: himnosPopular,
   );
 
   static final List<Himnario> todos = [
     ministerio,
     navidenno,
+    navidennoSib,
     majestuoso,
     gracia,
     celebremos,

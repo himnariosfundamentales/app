@@ -1,0 +1,38 @@
+import '../models/himno.dart';
+
+// Himnario Navideño Bautista para trompeta en Si♭: los himnos 1 al 32, con los mismos títulos que el
+// Navideño. Los que todavía no están transcritos (25, 26, 27, 29, 31 y 32) tienen una hoja "Próximamente".
+final List<Himno> himnosNavidennoSib = [
+  Himno(nombre: "Allá en el pesebre", numero: 1),
+  Himno(nombre: "Al mundo paz", numero: 2),
+  Himno(nombre: "Al rústico pesebre", numero: 3),
+  Himno(nombre: "A media noche en Belén", numero: 4),
+  Himno(nombre: "Ángeles cantando están", numero: 5),
+  Himno(nombre: "Ángeles de alta gloria", numero: 6),
+  Himno(nombre: "Allá en el pesebre, segunda melodía (Away in a Manger)", numero: 7),
+  Himno(nombre: "Trayendo nuestro todo (Bringing Our All)", numero: 8),
+  Himno(nombre: "Cristianos, hoy cantad a Dios", numero: 9),
+  Himno(nombre: "Cristo ha nacido", numero: 10),
+  Himno(nombre: "Dime la historia de Cristo", numero: 11),
+  Himno(nombre: "Gloria a Dios en las alturas", numero: 12),
+  Himno(nombre: "Dios os bendiga y dé su paz", numero: 13),
+  Himno(nombre: "La noticia sin igual", numero: 14),
+  Himno(nombre: "Noche de paz", numero: 15),
+  Himno(nombre: "Oh niños, venid", numero: 16),
+  Himno(nombre: "Oh, pueblecito de Belén", numero: 17),
+  Himno(nombre: "Oh santísimo, felicísimo", numero: 18),
+  Himno(nombre: "Oh ven, bendito Emanuel", numero: 19),
+  Himno(nombre: "Oíd un son en alta esfera", numero: 20),
+  Himno(nombre: "En Belén hubo un establo (Once in Royal David's City)", numero: 21),
+  Himno(nombre: "Pastores cerca de Belén", numero: 22),
+  Himno(nombre: "Suenen dulces himnos", numero: 23),
+  Himno(nombre: "Santa la noche", numero: 24),
+  Himno(nombre: "Hay una canción en el aire (There's a Song in the Air)", numero: 25),
+  Himno(nombre: "Tú dejaste tu trono", numero: 26),
+  Himno(nombre: "Tú dejaste tu trono, segunda melodía", numero: 27),
+  Himno(nombre: "Ved al niñito", numero: 28),
+  Himno(nombre: "Ve, dilo a las montañas", numero: 29),
+  Himno(nombre: "Venid, fieles todos", numero: 30),
+  Himno(nombre: "Vigilante, cuéntanos sobre la noche (Watchman, Tell Us of the Night)", numero: 31),
+  Himno(nombre: "Nosotros somos los tres reyes del Oriente (We Three Kings of Orient Are)", numero: 32),
+];
