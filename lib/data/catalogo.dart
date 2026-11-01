@@ -47,6 +47,7 @@ class Catalogo {
     incluido: true,
     color: const Color(0xFF153273),
     himnos: himnosNavidennoSib,
+    afinacion: Afinacion.enSiBemol,
   );
 
   static final Himnario majestuoso = Himnario(
@@ -119,6 +120,17 @@ class Catalogo {
     navidennoSib,
   ];
 
+  /// Las afinaciones que tienen algún himnario, en el orden de [Afinacion].
+  static final List<Afinacion> afinaciones = [
+    for (final Afinacion afinacion in Afinacion.values)
+      if (todos.any((himnario) => himnario.afinacion == afinacion)) afinacion,
+  ];
+
+  static List<Himnario> de(Afinacion afinacion) => [
+    for (final Himnario himnario in todos)
+      if (himnario.afinacion == afinacion) himnario,
+  ];
+
   static Himnario? porId(String id) {
     for (final Himnario himnario in todos) {
       if (himnario.id == id) return himnario;
@@ -129,26 +141,28 @@ class Catalogo {
   // Número solo ("11") o con la letra de un himnario ("M11", "g 11").
   static final RegExp _numeroConLetra = RegExp(r'^([a-zA-Z]?)\s*(\d+)$');
 
-  /// Búsqueda en todos los himnarios. Un número solo busca en todos y con
-  /// letra solo en ese himnario ("M11" es el 11 de Himnos Majestuosos); los
-  /// exactos van primero (el 11, M11, G11... antes que el 110 o el 211). Un
-  /// texto busca en los títulos de todos, ordenados por nombre o, con
-  /// [porNumero], por número.
+  /// Búsqueda en los himnarios de [afinacion]. Un número solo busca en todos
+  /// ellos y con letra solo en ese himnario ("M11" es el 11 de Himnos
+  /// Majestuosos); los exactos van primero (el 11, M11, G11... antes que el
+  /// 110 o el 211). Un texto busca en los títulos de todos, ordenados por
+  /// nombre o, con [porNumero], por número.
   ///
   /// Dentro de un himnario ([actual]) sus himnos van primero; con un número,
   /// primero entre los exactos y luego entre los demás.
   static List<HimnoEncontrado> buscar(
     String texto, {
+    required Afinacion afinacion,
     Himnario? actual,
     bool porNumero = false,
   }) {
     final String consulta = texto.trim();
     if (consulta.isEmpty) return const [];
 
+    final List<Himnario> himnarios = de(afinacion);
     final RegExpMatch? numero = _numeroConLetra.firstMatch(consulta);
     if (numero == null) {
       return _suyosPrimero([
-        for (final Himnario himnario in todos)
+        for (final Himnario himnario in himnarios)
           for (final Himno himno in buscarEn(
             consulta,
             porNumero ? himnario.himnosPorNumero : himnario.himnosPorNombre,
@@ -160,7 +174,7 @@ class Catalogo {
     final String letra = numero[1]!.toUpperCase();
     // Una letra que no es de ningún himnario ("X11"): no hay resultados.
     final List<HimnoEncontrado> encontrados = [
-      for (final Himnario himnario in todos)
+      for (final Himnario himnario in himnarios)
         if (letra.isEmpty || himnario.prefijo == letra)
           ..._porNumero(himnario, numero[2]!),
     ];

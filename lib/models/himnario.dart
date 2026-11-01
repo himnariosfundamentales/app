@@ -2,13 +2,27 @@ import 'dart:ui' show Color;
 
 import 'himno.dart';
 
+/// En qué afinación están escritas las partituras de un himnario: en Do, la
+/// de siempre, o transportadas para los instrumentos en Si♭ o en Fa.
+enum Afinacion {
+  enDo('Do', 'Partituras en Do: voz, piano, guitarra'),
+  enSiBemol('Si♭', 'Partituras para instrumentos en Si♭: trompeta, clarinete'),
+  enFa('Fa', 'Partituras para instrumentos en Fa: corno francés');
+
+  final String nombre;
+  final String descripcion;
+
+  const Afinacion(this.nombre, this.descripcion);
+}
+
 /// Un himnario de la app. Sus hojas están en `assets/himnarios/<id>/`.
 class Himnario {
   final String id;
   final String nombre;
 
   /// Letra que va antes del número en el buscador general ("M11"). Vacía en
-  /// el himnario principal: "11" es su himno 11.
+  /// el himnario principal: "11" es su himno 11. Solo se busca entre los de
+  /// la misma afinación, así que basta con que no se repita dentro de una.
   final String prefijo;
 
   /// El principal viene incluido; los demás piden aceptar los términos antes
@@ -26,6 +40,10 @@ class Himnario {
   /// primera página de un libro; también donde se quitó una página suelta.
   final Set<String> blancosAntes;
 
+  /// En el inicio se ven y se buscan solo los de la afinación elegida; dentro
+  /// de un himnario, los de la suya.
+  final Afinacion afinacion;
+
   Himnario({
     required this.id,
     required this.nombre,
@@ -34,6 +52,7 @@ class Himnario {
     required this.color,
     required this.himnos,
     this.blancosAntes = const {'1-1'},
+    this.afinacion = Afinacion.enDo,
   });
 
   String get carpeta => 'assets/himnarios/$id/';

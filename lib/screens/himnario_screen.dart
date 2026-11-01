@@ -10,7 +10,8 @@ import 'visor_screen.dart';
 enum OrdenHimnos { numero, nombre }
 
 /// Lista de los himnos de un himnario, con su buscador. El buscador también
-/// encuentra los de los otros himnarios, después de los de este.
+/// encuentra los de los otros himnarios de su afinación, después de los de
+/// este.
 class HimnarioScreen extends StatefulWidget {
   final Himnario himnario;
 
@@ -92,6 +93,7 @@ class _HimnarioScreenState extends State<HimnarioScreen> {
             ]
           : Catalogo.buscar(
               query,
+              afinacion: _himnario.afinacion,
               actual: _himnario,
               porNumero: _orden == OrdenHimnos.numero,
             );

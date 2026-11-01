@@ -531,13 +531,17 @@ class _VisorScreenState extends State<VisorScreen> {
   }
 
   // Sin texto, la lista de este himnario; con texto, los de este himnario
-  // primero y después los de los otros.
+  // primero y después los de los otros de su afinación.
   List<HimnoEncontrado> _sugerencias(String texto) => texto.trim().isEmpty
       ? [
           for (final Himno himno in widget.himnario.himnosPorNumero)
             HimnoEncontrado(widget.himnario, himno),
         ]
-      : Catalogo.buscar(texto, actual: widget.himnario);
+      : Catalogo.buscar(
+          texto,
+          afinacion: widget.himnario.afinacion,
+          actual: widget.himnario,
+        );
 
   Future<void> _irAlHimnoBuscado(HimnoEncontrado encontrado) async {
     _buscador.closeView('');
@@ -592,6 +596,7 @@ class _VisorScreenState extends State<VisorScreen> {
       viewOnSubmitted: (texto) {
         final List<HimnoEncontrado> resultados = Catalogo.buscar(
           texto,
+          afinacion: widget.himnario.afinacion,
           actual: widget.himnario,
         );
         if (resultados.isNotEmpty) _irAlHimnoBuscado(resultados.first);

@@ -5,6 +5,7 @@ import '../data/catalogo.dart';
 import '../models/himnario.dart';
 import '../models/himno.dart';
 import '../services/actualizacion_service.dart';
+import '../services/afinacion_service.dart';
 import '../services/download_service.dart';
 import '../services/instalacion_web.dart';
 import '../services/red_web.dart';
@@ -28,8 +29,9 @@ class _Estado {
   const _Estado(this.aceptado, this.descargado);
 }
 
-/// Pantalla principal: los himnarios, el buscador en todos ellos y el menú
-/// general (respaldo, descargas, instalación y ayuda).
+/// Pantalla principal: los himnarios de la afinación elegida (Do, Si♭...), el
+/// buscador en todos ellos y el menú general (respaldo, descargas,
+/// instalación y ayuda).
 class InicioScreen extends StatefulWidget {
   const InicioScreen({super.key});
 
@@ -43,9 +45,14 @@ class _InicioScreenState extends State<InicioScreen> {
   Map<Himnario, _Estado> _estados = {};
   Map<Himnario, ActualizacionPendiente> _actualizaciones = {};
 
+  // Hasta leer la guardada no se muestran los himnarios: quien usa Si♭ vería
+  // pasar los de Do al abrir la app.
+  Afinacion? _afinacion;
+
   @override
   void initState() {
     super.initState();
+    _cargarAfinacion();
     // Con unos segundos de espera ya se cargó todo lo que la app usa al abrir
     // (la lista de assets se pide al mostrar las portadas).
     unawaited(
@@ -98,8 +105,30 @@ class _InicioScreenState extends State<InicioScreen> {
     }
   }
 
-  void _buscar(String texto) =>
-      setState(() => _resultados = Catalogo.buscar(texto));
+  Future<void> _cargarAfinacion() async {
+    final Afinacion afinacion = await AfinacionService.elegida();
+    if (mounted) _cambiarAfinacion(afinacion);
+  }
+
+  void _elegirAfinacion(Afinacion afinacion) {
+    unawaited(AfinacionService.elegir(afinacion));
+    _cambiarAfinacion(afinacion);
+  }
+
+  // Si ya hay algo escrito, se busca de nuevo en los de la nueva afinación.
+  void _cambiarAfinacion(Afinacion afinacion) {
+    _afinacion = afinacion;
+    _buscar(_busqueda.text);
+  }
+
+  void _buscar(String texto) {
+    final Afinacion? afinacion = _afinacion;
+    setState(
+      () => _resultados = afinacion == null
+          ? const []
+          : Catalogo.buscar(texto, afinacion: afinacion),
+    );
+  }
 
   /// Abre el himnario, o directo el himno. Si el himnario pide términos y
   /// todavía no se aceptaron, primero se ofrece descargarlo.
@@ -369,6 +398,7 @@ class _InicioScreenState extends State<InicioScreen> {
       0,
       (suma, pendiente) => suma + pendiente.hojas.length,
     );
+    final Afinacion? afinacion = _afinacion;
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -425,7 +455,9 @@ class _InicioScreenState extends State<InicioScreen> {
               onChanged: _buscar,
               decoration: InputDecoration(
                 labelText: 'Buscar en todos los himnarios',
-                hintText: 'Título o número: 11, M11, G11',
+                hintText: afinacion == null
+                    ? null
+                    : 'Título o número: ${_ejemplos(afinacion)}',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10.0),
@@ -442,25 +474,81 @@ class _InicioScreenState extends State<InicioScreen> {
               ),
             ),
           ),
-          Expanded(
-            child: _busqueda.text.trim().isEmpty
-                ? _construirHimnarios()
-                : _construirResultados(),
-          ),
+          if (afinacion != null) ...[
+            if (Catalogo.afinaciones.length > 1) _construirSelector(afinacion),
+            Expanded(
+              child: _busqueda.text.trim().isEmpty
+                  ? _construirHimnarios(afinacion)
+                  : _construirResultados(afinacion),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _construirResultados() {
+  // "11, N11, M11": el número solo y con la letra de los primeros himnarios.
+  static String _ejemplos(Afinacion afinacion) => [
+    '11',
+    ...Catalogo.de(afinacion)
+        .where((himnario) => himnario.prefijo.isNotEmpty)
+        .take(2)
+        .map((himnario) => himnario.etiqueta(11)),
+  ].join(', ');
+
+  // Sale solo con dos o más afinaciones con himnarios: la de Fa se agrega al
+  // catálogo con su primer himnario.
+  Widget _construirSelector(Afinacion elegida) => Padding(
+    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+    child: SegmentedButton<Afinacion>(
+      segments: [
+        for (final Afinacion afinacion in Catalogo.afinaciones)
+          ButtonSegment(
+            value: afinacion,
+            label: Text(afinacion.nombre),
+            tooltip: afinacion.descripcion,
+          ),
+      ],
+      selected: {elegida},
+      onSelectionChanged: (seleccion) => _elegirAfinacion(seleccion.first),
+    ),
+  );
+
+  // "Un número solo busca en todos los himnarios; con N solo en el Himnario
+  // Navideño Bautista, con M en Himnos Majestuosos... y con P en El Nuevo
+  // Himnario Popular."
+  static String _sinResultados(Afinacion afinacion) {
+    final List<Himnario> conLetra = [
+      for (final Himnario himnario in Catalogo.de(afinacion))
+        if (himnario.prefijo.isNotEmpty) himnario,
+    ];
+    final List<String> letras = [
+      for (final (int i, Himnario himnario) in conLetra.indexed)
+        'con ${himnario.prefijo}${i == 0 ? ' solo' : ''} en ${_conArticulo(himnario.nombre)}',
+    ];
+    final String lista = letras.length < 2
+        ? letras.join()
+        : '${letras.sublist(0, letras.length - 1).join(', ')} y ${letras.last}';
+    final String donde = afinacion == Afinacion.enDo
+        ? 'todos los himnarios'
+        : 'todos los himnarios en ${afinacion.nombre}';
+    return 'No se encontró ningún himno.\nUn número solo busca en $donde${lista.isEmpty ? '' : '; $lista'}.';
+  }
+
+  // "el Himnario Bautista", pero "Himnos de Gracia" y "El Nuevo Himnario
+  // Popular".
+  static String _conArticulo(String nombre) =>
+      nombre.startsWith('Himnario ') ? 'el $nombre' : nombre;
+
+  Widget _construirResultados(Afinacion afinacion) {
     if (_resultados.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Text(
-            'No se encontró ningún himno.\nUn número solo busca en todos los himnarios; con N solo en el Himnario Navideño Bautista, con M en Himnos Majestuosos, con G en Himnos de Gracia, con C en Celebremos su Gloria, con B en el Himnario Bautista, con P en El Nuevo Himnario Popular y con T en el Himnario Navideño Bautista Si♭.',
+            _sinResultados(afinacion),
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey),
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
       );
@@ -478,7 +566,8 @@ class _InicioScreenState extends State<InicioScreen> {
     );
   }
 
-  Widget _construirHimnarios() {
+  Widget _construirHimnarios(Afinacion afinacion) {
+    final List<Himnario> himnarios = Catalogo.de(afinacion);
     return LayoutBuilder(
       builder: (context, restricciones) {
         final int columnas = (restricciones.maxWidth / 220).floor().clamp(2, 6);
@@ -494,9 +583,8 @@ class _InicioScreenState extends State<InicioScreen> {
             // nombre y los botones.
             mainAxisExtent: ancho * 11 / 8.5 + 150,
           ),
-          itemCount: Catalogo.todos.length,
-          itemBuilder: (context, index) =>
-              _construirTarjeta(Catalogo.todos[index]),
+          itemCount: himnarios.length,
+          itemBuilder: (context, index) => _construirTarjeta(himnarios[index]),
         );
       },
     );
