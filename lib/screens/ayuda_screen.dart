@@ -163,7 +163,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Subtitulo('Descargar un himnario'),
                     _Punto(
-                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnario Navideño Bautista 7 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB, Himnario Bautista 58 MB, El Nuevo Himnario Popular 46 MB, Himnario Navideño Bautista Si♭ 2 MB; mejor con Wi-Fi). Después funciona sin internet.',
+                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnario Navideño Bautista 6 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB, Himnario Bautista 58 MB, El Nuevo Himnario Popular 46 MB, Himnario Navideño Bautista Si♭ 2 MB; mejor con Wi-Fi). Después funciona sin internet.',
                     ),
                     _Subtitulo(
                       'Verificar descargas (menú ⋮ de la pantalla principal)',
