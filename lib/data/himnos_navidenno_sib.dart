@@ -1,7 +1,7 @@
 import '../models/himno.dart';
 
-// Himnario Navideño Bautista para trompeta en Si♭: los himnos 1 al 32, con los mismos títulos que el
-// Navideño. Los que todavía no están transcritos (25, 26, 27, 29, 31 y 32) tienen una hoja "Próximamente".
+// Himnario Navideño Bautista para trompeta en Si♭: los 65 himnos, con los mismos títulos que el Navideño.
+// Los que todavía no están transcritos tienen una hoja "Próximamente".
 final List<Himno> himnosNavidennoSib = [
   Himno(nombre: "Allá en el pesebre", numero: 1),
   Himno(nombre: "Al mundo paz", numero: 2),
@@ -35,4 +35,37 @@ final List<Himno> himnosNavidennoSib = [
   Himno(nombre: "Venid, fieles todos", numero: 30),
   Himno(nombre: "Guarda, ¿qué noticia das?", numero: 31),
   Himno(nombre: "Vamos magos hoy a Belén", numero: 32),
+  Himno(nombre: "De tierra lejana venimos", numero: 33),
+  Himno(nombre: "Desde el oriente azul", numero: 34),
+  Himno(nombre: "Diez mil aleluyas", numero: 35),
+  Himno(nombre: "El cumpleaños de un Rey", numero: 36),
+  Himno(nombre: "El pesebre", numero: 37),
+  Himno(nombre: "Emanuel", numero: 38),
+  Himno(nombre: "En Belén nació Jesús", numero: 39),
+  Himno(nombre: "En la noche los pastores", numero: 40),
+  Himno(nombre: "En sombrío invierno", numero: 41),
+  Himno(nombre: "Es Jesús, ¡qué bella historia!", numero: 42),
+  Himno(nombre: "Feliz Navidad", numero: 43),
+  Himno(nombre: "Allá en Belén", numero: 44),
+  Himno(nombre: "Gozo en luto", numero: 45),
+  Himno(nombre: "Hoy es Navidad", numero: 46),
+  Himno(nombre: "Hoy la nueva dad", numero: 47),
+  Himno(nombre: "Jesucristo hoy nació", numero: 48),
+  Himno(nombre: "Jesús es el Mesías", numero: 49),
+  Himno(nombre: "Las campanas de Navidad", numero: 50),
+  Himno(nombre: "Las campanas suenan ya", numero: 51),
+  Himno(nombre: "Navidad latina", numero: 52),
+  Himno(nombre: "Y tú, Belén", numero: 53),
+  Himno(nombre: "Niño santo, sufres tanto", numero: 54),
+  Himno(nombre: "Porque un niño", numero: 55),
+  Himno(nombre: "Riquezas de mil reinados", numero: 56),
+  Himno(nombre: "Marcha de los magos", numero: 57),
+  Himno(nombre: "Tierna María", numero: 58),
+  Himno(nombre: "Tras hermoso lucero", numero: 59),
+  Himno(nombre: "¡Qué gozo da!", numero: 60),
+  Himno(nombre: "Un canto de Belén cantad", numero: 61),
+  Himno(nombre: "Venid, pastorcillos", numero: 62),
+  Himno(nombre: "Venid, pastorcitos", numero: 63),
+  Himno(nombre: "Venid, pastores", numero: 64),
+  Himno(nombre: "Villancico de la estrella", numero: 65),
 ];
