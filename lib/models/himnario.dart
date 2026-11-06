@@ -2,12 +2,14 @@ import 'dart:ui' show Color;
 
 import 'himno.dart';
 
-/// En qué afinación están escritas las partituras de un himnario: en Do, la
-/// de siempre, o transportadas para los instrumentos en Si♭ o en Fa.
+/// En qué afinación o clave están escritas las partituras de un himnario: en
+/// Do, la de siempre, transportadas para los instrumentos en Si♭ o en Fa, o en
+/// clave de Do para viola.
 enum Afinacion {
   enDo('Do', 'Partituras en Do: voz, piano, guitarra'),
   enSiBemol('Si♭', 'Partituras para instrumentos en Si♭: trompeta, clarinete'),
-  enFa('Fa', 'Partituras para instrumentos en Fa: corno francés');
+  enFa('Fa', 'Partituras para instrumentos en Fa: corno francés'),
+  claveDeDo('Clave de Do', 'Partituras en clave de Do: viola');
 
   final String nombre;
   final String descripcion;

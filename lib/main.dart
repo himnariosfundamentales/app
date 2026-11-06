@@ -68,9 +68,10 @@ class _HimnarioAppState extends State<HimnarioApp> {
                 _mensajes.currentState?.hideCurrentMaterialBanner(),
             child: const Text('Después'),
           ),
-          const FilledButton(
-            onPressed: VersionAppService.actualizar,
-            child: Text('Actualizar'),
+          FilledButton(
+            onPressed: () =>
+                VersionAppService.actualizar(_mensajes.currentState),
+            child: const Text('Actualizar'),
           ),
         ],
       ),

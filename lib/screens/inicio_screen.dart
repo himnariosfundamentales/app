@@ -419,7 +419,9 @@ class _InicioScreenState extends State<InicioScreen> {
           PopupMenuButton<String>(
             tooltip: 'Más opciones',
             onSelected: (opcion) => switch (opcion) {
-              'actualizar_app' => VersionAppService.actualizar(),
+              'actualizar_app' => VersionAppService.actualizar(
+                ScaffoldMessenger.maybeOf(context),
+              ),
               'instalar' => _instalarApp(),
               'respaldo' => RespaldoUi.guardar(context),
               'restaurar' => _restaurarRespaldo(),
@@ -501,11 +503,17 @@ class _InicioScreenState extends State<InicioScreen> {
   Widget _construirSelector(Afinacion elegida) => Padding(
     padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
     child: SegmentedButton<Afinacion>(
+      // Sin palomita y achicando la letra si no cabe: en un teléfono de 360 px
+      // "Clave de Do" se partía en tres renglones al elegirlo.
+      showSelectedIcon: false,
       segments: [
         for (final Afinacion afinacion in Catalogo.afinaciones)
           ButtonSegment(
             value: afinacion,
-            label: Text(afinacion.nombre),
+            label: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(afinacion.nombre, maxLines: 1),
+            ),
             tooltip: afinacion.descripcion,
           ),
       ],

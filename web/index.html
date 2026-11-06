@@ -43,6 +43,25 @@
     window.addEventListener('appinstalled', () => {
       window.avisoInstalacion = null;
     });
+    // "Actualizar": el service worker baja la versión nueva completa y después
+    // se recarga. 'error' si no se pudo (sin internet): se queda la que está.
+    window.himnarioActualizar = async () => {
+      const sw = navigator.serviceWorker?.controller;
+      if (sw) {
+        const resultado = await new Promise((resolve) => {
+          const canal = new MessageChannel();
+          canal.port1.onmessage = (evento) => resolve(evento.data);
+          sw.postMessage({ tipo: 'actualizar' }, [canal.port2]);
+          setTimeout(() => resolve('tiempo agotado'), 120000);
+        });
+        if (resultado !== 'ok') {
+          console.warn('No se pudo bajar la versión nueva', resultado);
+          return 'error';
+        }
+      }
+      location.reload();
+      return 'ok';
+    };
     window.himnarioInstalar = async () => {
       const aviso = window.avisoInstalacion;
       if (!aviso) return 'no-disponible';

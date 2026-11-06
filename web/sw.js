@@ -17,15 +17,12 @@ const ARCHIVOS_BASE = [
 // Recursos externos con URL versionada: si ya están en caché no cambian.
 const HOSTS_EXTERNOS = ['fonts.gstatic.com', 'www.gstatic.com'];
 
-const ESPERA_RED_MS = 4000;
-
+// Cada worker nuevo baja la app completa antes de tomar el control: quien venga
+// del worker de antes (red primero) podría tener guardada una versión vieja sin
+// "Actualizar" que use actualizarApp, y appGuardada ya no la reemplazaría.
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE).then((cache) =>
-      Promise.allSettled(ARCHIVOS_BASE.map((url) => cache.add(url)))
-    )
-  );
+  event.waitUntil(actualizarApp());
 });
 
 self.addEventListener('activate', (event) => {
@@ -57,16 +54,18 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin === self.location.origin) {
-    // Las portadas pueden cambiar sin que cambie versiones.json: van como el
-    // resto de la app.
-    if (url.pathname.includes('/assets/himnarios/') && !url.pathname.endsWith('/portada.webp')) {
+    if (url.pathname.endsWith('/portada.webp')) {
+      // Las portadas pueden cambiar sin que cambie versiones.json: se muestra
+      // la guardada y se revisa en segundo plano para la próxima vez.
+      event.respondWith(guardadaYRevisar(event));
+    } else if (url.pathname.includes('/assets/himnarios/')) {
       // Las hojas no cambian salvo que la app pida la versión nueva
       // ('reload'), cuando versiones.json indica que cambió.
       event.respondWith(
         request.cache === 'reload' ? descargarYGuardar(request) : cachePrimero(request)
       );
     } else {
-      event.respondWith(redPrimero(event));
+      event.respondWith(appGuardada(request));
     }
   } else if (HOSTS_EXTERNOS.includes(url.hostname)) {
     event.respondWith(cachePrimero(request));
@@ -86,8 +85,8 @@ async function guardarSiCambio(request, respuesta) {
     const cache = await caches.open(CACHE);
     const etag = respuesta.headers.get('etag');
     const guardada = etag ? await cache.match(request) : undefined;
-    // Si el servidor dice que no cambió no se reescribe: main.dart.js y
-    // canvaskit pesan ~8 MB y se revisan cada vez que se abre la app.
+    // Si el servidor dice que no cambió no se reescribe (las portadas se
+    // revisan cada vez que se muestran).
     if (guardada && guardada.headers.get('etag') === etag) {
       await respuesta.body?.cancel();
       return;
@@ -103,35 +102,73 @@ async function cachePrimero(request) {
   return guardada ?? descargarYGuardar(request);
 }
 
-// App (index.html, main.dart.js, canvaskit...): la versión más nueva si hay
-// red; si la red falla o el servidor tarda demasiado en responder, la copia
-// guardada. Solo se espera la respuesta, no el archivo completo: si no, un
-// archivo grande y lento caía en la copia vieja mientras los chicos llegaban
-// nuevos, y se mezclaban dos versiones de la app. La copia se guarda aparte,
-// mientras la página recibe el archivo. 'no-cache' salta la caché HTTP de
-// GitHub Pages (10 minutos): siempre le pregunta al servidor si cambió, y si
-// no cambió la respuesta es mínima.
-async function redPrimero(event) {
+// App (index.html, main.dart.js, canvaskit...): la copia guardada, sin esperar
+// a la red. Antes se pedía todo a la red en cada arranque (hasta 4 s de espera)
+// y GitHub Pages da un ETag distinto según el servidor que conteste, así que
+// main.dart.js se volvía a bajar casi siempre: la app tardaba 3-4 s en abrir.
+// La versión nueva llega solo con "Actualizar" (ver 'actualizar' abajo), que la
+// baja completa de una vez para no mezclar archivos de dos versiones.
+async function appGuardada(request) {
+  const guardada =
+    (await caches.match(request)) ??
+    (request.mode === 'navigate' ? await caches.match('./') : undefined);
+  if (guardada) return sinReusoEnMemoria(guardada);
+  const respuesta = await fetch(request, { cache: 'no-cache' });
+  await guardarSiCambio(request, respuesta.clone());
+  return sinReusoEnMemoria(respuesta);
+}
+
+async function guardadaYRevisar(event) {
   const request = event.request;
-  const red = fetch(request, { cache: 'no-cache' }).then((respuesta) => {
-    event.waitUntil(guardarSiCambio(request, respuesta.clone()));
+  const red = fetch(request, { cache: 'no-cache' }).then(async (respuesta) => {
+    await guardarSiCambio(request, respuesta.clone());
     return respuesta;
   });
-  event.waitUntil(red.catch(() => {}));
-
-  try {
-    return sinReusoEnMemoria(await Promise.race([
-      red,
-      new Promise((_, rechazar) =>
-        setTimeout(() => rechazar(new Error('timeout')), ESPERA_RED_MS)
-      ),
-    ]));
-  } catch (e) {
-    const guardada =
-      (await caches.match(request)) ??
-      (request.mode === 'navigate' ? await caches.match('./') : undefined);
-    return sinReusoEnMemoria(guardada ?? (await red));
+  const guardada = await caches.match(request);
+  if (guardada) {
+    event.waitUntil(red.catch(() => {}));
+    return guardada;
   }
+  return red;
+}
+
+// La app pide la versión nueva ("Actualizar", cuando despliegue.txt dice que
+// se publicó otra): se bajan de nuevo todos los archivos de la app guardados
+// (no las hojas de los himnarios) y solo si llegaron todos se reemplazan, para
+// no quedar con una mezcla. Uno que ya no existe (404) se borra, salvo los de
+// ARCHIVOS_BASE. Responde 'ok' o el error por el puerto del mensaje.
+self.addEventListener('message', (event) => {
+  if (event.data?.tipo !== 'actualizar') return;
+  const puerto = event.ports[0];
+  event.waitUntil(
+    actualizarApp().then(
+      () => puerto?.postMessage('ok'),
+      (e) => puerto?.postMessage(String(e))
+    )
+  );
+});
+
+async function actualizarApp() {
+  const cache = await caches.open(CACHE);
+  const base = new Set(ARCHIVOS_BASE.map((archivo) => new URL(archivo, self.registration.scope).href));
+  const urls = new Set(base);
+  for (const request of await cache.keys()) {
+    const url = new URL(request.url);
+    if (url.origin === self.location.origin && !url.pathname.includes('/assets/himnarios/')) {
+      urls.add(request.url);
+    }
+  }
+  const nuevas = await Promise.all(
+    [...urls].map(async (url) => {
+      const respuesta = await fetch(url, { cache: 'reload' });
+      if (respuesta.status === 404 && !base.has(url)) return [url, null];
+      if (!respuesta.ok) throw new Error(`${respuesta.status} ${url}`);
+      return [url, respuesta];
+    })
+  );
+  await Promise.all(
+    nuevas.map(([url, respuesta]) => (respuesta ? cache.put(url, respuesta) : cache.delete(url)))
+  );
 }
 
 // Chrome guarda en memoria los scripts ya cargados (main.dart.js, canvaskit.js)

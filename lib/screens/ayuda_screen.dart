@@ -31,14 +31,14 @@ class AyudaScreen extends StatelessWidget {
                     ),
                     _Punto('El Himnario Ministerio Musical viene incluido.'),
                     _Punto(
-                      'El Himnario Navideño Bautista y su versión para trompeta (Himnario Navideño Bautista Si♭) se descargan con su botón "Descargar" y no piden términos de uso.',
+                      'El Himnario Navideño Bautista y sus versiones para trompeta (Himnario Navideño Bautista Si♭), para corno (Himnario Navideño Bautista Fa) y para viola (Himnario Navideño Bautista Clave de Do) se descargan con su botón "Descargar" y no piden términos de uso.',
                     ),
                     _Punto(
                       'Los demás (Himnos Majestuosos, Himnos de Gracia, Celebremos su Gloria, Himnario Bautista, El Nuevo Himnario Popular) se descargan con su botón "Descargar". Antes se muestran los términos de uso: descárgalos solo si tienes ese himnario en físico.',
                     ),
-                    _Subtitulo('Do y Si♭'),
+                    _Subtitulo('Do, Si♭, Fa y Clave de Do'),
                     _Punto(
-                      'Debajo del buscador eliges la afinación. Do muestra los himnarios de siempre, para voz, piano y guitarra. Si♭ muestra los transportados para trompeta y otros instrumentos en Si♭.',
+                      'Debajo del buscador eliges la afinación. Do muestra los himnarios de siempre, para voz, piano y guitarra. Si♭ muestra los transportados para trompeta y otros instrumentos en Si♭, Fa los transportados para corno francés y Clave de Do los escritos en clave de Do para viola.',
                     ),
                     _Punto(
                       'Los buscadores buscan solo en los himnarios de esa afinación. La app recuerda la que elegiste.',
@@ -48,7 +48,7 @@ class AyudaScreen extends StatelessWidget {
                       'El buscador de la pantalla principal busca por título en todos los himnarios de la afinación elegida.',
                     ),
                     _Punto(
-                      'Por número: 11 busca el himno 11 en todos ellos. Con letra busca solo en uno: N11 es el del Himnario Navideño Bautista, M11 el de Himnos Majestuosos, G11 el de Himnos de Gracia, C11 el de Celebremos su Gloria, B11 el del Himnario Bautista y P11 el de El Nuevo Himnario Popular. En Si♭, T11 es el del Himnario Navideño Bautista Si♭.',
+                      'Por número: 11 busca el himno 11 en todos ellos. Con letra busca solo en uno: N11 es el del Himnario Navideño Bautista, M11 el de Himnos Majestuosos, G11 el de Himnos de Gracia, C11 el de Celebremos su Gloria, B11 el del Himnario Bautista y P11 el de El Nuevo Himnario Popular. En Si♭, T11 es el del Himnario Navideño Bautista Si♭; en Fa, F11 el del Himnario Navideño Bautista Fa, y en Clave de Do, V11 el del Himnario Navideño Bautista Clave de Do.',
                     ),
                     _Punto(
                       'Si eliges un himno de un himnario que no has descargado, primero te ofrece descargarlo.',
@@ -98,7 +98,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Subtitulo('Guardar respaldo'),
                     _Punto(
-                      'Crea un archivo con todos los himnarios descargados (himnarios-fecha.zip; con los siete himnarios pesa cerca de 300 MB) sin usar internet.',
+                      'Crea un archivo con todos los himnarios descargados (himnarios-fecha.zip; con los diez himnarios pesa cerca de 300 MB) sin usar internet.',
                     ),
                     _Punto(
                       'En Android queda en la carpeta Descargas; en iPad eliges dónde guardarlo, por ejemplo en Archivos.',
@@ -163,7 +163,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Subtitulo('Descargar un himnario'),
                     _Punto(
-                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnario Navideño Bautista 5 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB, Himnario Bautista 58 MB, El Nuevo Himnario Popular 46 MB, Himnario Navideño Bautista Si♭ 3 MB; mejor con Wi-Fi). Después funciona sin internet.',
+                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnario Navideño Bautista 5 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB, Himnario Bautista 58 MB, El Nuevo Himnario Popular 46 MB, Himnario Navideño Bautista Si♭ 5 MB, Himnario Navideño Bautista Fa 5 MB, Himnario Navideño Bautista Clave de Do 5 MB; mejor con Wi-Fi). Después funciona sin internet.',
                     ),
                     _Subtitulo(
                       'Verificar descargas (menú ⋮ de la pantalla principal)',
@@ -200,7 +200,7 @@ class AyudaScreen extends StatelessWidget {
                       'Dentro de cada himnario busca por número o por título (no importan los acentos) y ordena la lista por número o por nombre.',
                     ),
                     _Punto(
-                      'Ese buscador también encuentra los himnos de los otros himnarios de la misma afinación (Do o Si♭), después de los del himnario en que estás. Un número solo busca en todos ellos; con letra (N11, M11, G11, C11, B11, P11 o, en Si♭, T11), solo en ese himnario.',
+                      'Ese buscador también encuentra los himnos de los otros himnarios de la misma afinación (Do, Si♭, Fa o Clave de Do), después de los del himnario en que estás. Un número solo busca en todos ellos; con letra (N11, M11, G11, C11, B11, P11 o, en Si♭, T11; en Fa, F11, y en Clave de Do, V11), solo en ese himnario.',
                     ),
                     _Punto(
                       'Dentro de un himno, desliza a los lados o usa < > para pasar de hoja o de himno. El buscador de arriba abre cualquier otro, también de otro himnario; sin escribir nada muestra la lista del himnario en que estás.',

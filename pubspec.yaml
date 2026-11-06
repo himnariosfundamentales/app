@@ -63,6 +63,8 @@ flutter:
     - assets/himnarios/ministerio/
     - assets/himnarios/navidenno/
     - assets/himnarios/navidenno_sib/
+    - assets/himnarios/navidenno_fa/
+    - assets/himnarios/navidenno_clave_do/
     - assets/himnarios/majestuoso/
     - assets/himnarios/gracia/
     - assets/himnarios/celebremos/

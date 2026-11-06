@@ -43,7 +43,7 @@ final List<Himno> himnosNavidenno = [
   Himno(nombre: "Emanuel", numero: 38),
   Himno(nombre: "En Belén nació Jesús", numero: 39),
   Himno(nombre: "En la noche los pastores", numero: 40),
-  Himno(nombre: "En sombrío invierno", numero: 41),
+  Himno(nombre: "María, ¿sabías tú? (Mary, Did You Know?)", numero: 41),
   Himno(nombre: "Es Jesús, ¡qué bella historia!", numero: 42),
   Himno(nombre: "Feliz Navidad", numero: 43),
   Himno(nombre: "Allá en Belén", numero: 44),
@@ -68,4 +68,9 @@ final List<Himno> himnosNavidenno = [
   Himno(nombre: "Venid, pastorcitos", numero: 63),
   Himno(nombre: "Venid, pastores", numero: 64),
   Himno(nombre: "Villancico de la estrella", numero: 65),
+  Himno(nombre: "Astro, el más bello", numero: 66),
+  Himno(nombre: "Alegría por doquiera", numero: 67),
+  Himno(nombre: "Oíd su voz, ya cerca está", numero: 68),
+  Himno(nombre: "Ven, Jesús, muy esperado", numero: 69),
+  Himno(nombre: "Rey de Reyes", numero: 70),
 ];

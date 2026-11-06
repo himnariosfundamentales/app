@@ -10,6 +10,8 @@ import 'himnos_majestuoso.dart';
 import 'himnos_ministerio.dart';
 import 'himnos_navidenno.dart';
 import 'himnos_navidenno_sib.dart';
+import 'himnos_navidenno_clave_do.dart';
+import 'himnos_navidenno_fa.dart';
 import 'himnos_popular.dart';
 
 /// Un himno junto con el himnario al que pertenece.
@@ -48,6 +50,28 @@ class Catalogo {
     color: const Color(0xFF153273),
     himnos: himnosNavidennoSib,
     afinacion: Afinacion.enSiBemol,
+  );
+
+  /// El Navideño transportado para corno en Fa.
+  static final Himnario navidennoFa = Himnario(
+    id: 'navidenno_fa',
+    nombre: 'Himnario Navideño Bautista Fa',
+    prefijo: 'F',
+    incluido: true,
+    color: const Color(0xFF6B3E1F),
+    himnos: himnosNavidennoFa,
+    afinacion: Afinacion.enFa,
+  );
+
+  /// El Navideño en clave de Do (las 4 voces, sin transportar), para viola.
+  static final Himnario navidennoClaveDo = Himnario(
+    id: 'navidenno_clave_do',
+    nombre: 'Himnario Navideño Bautista Clave de Do',
+    prefijo: 'V',
+    incluido: true,
+    color: const Color(0xFF612695),
+    himnos: himnosNavidennoClaveDo,
+    afinacion: Afinacion.claveDeDo,
   );
 
   static final Himnario majestuoso = Himnario(
@@ -118,6 +142,8 @@ class Catalogo {
     bautista,
     popular,
     navidennoSib,
+    navidennoFa,
+    navidennoClaveDo,
   ];
 
   /// Las afinaciones que tienen algún himnario, en el orden de [Afinacion].
