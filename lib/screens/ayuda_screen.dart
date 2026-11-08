@@ -31,7 +31,7 @@ class AyudaScreen extends StatelessWidget {
                     ),
                     _Punto('El Himnario Ministerio Musical viene incluido.'),
                     _Punto(
-                      'El Himnario Navideño Bautista y sus versiones para trompeta (Himnario Navideño Bautista Si♭), para corno (Himnario Navideño Bautista Fa) y para viola (Himnario Navideño Bautista Clave de Do) se descargan con su botón "Descargar" y no piden términos de uso.',
+                      'El Himnario Navideño Bautista y sus versiones para trompeta (Himnario Navideño Bautista Si♭), para corno (Himnario Navideño Bautista Fa) y para viola (Himnario Navideño Bautista Clave de Do), y Partituras Selectas, se descargan con su botón "Descargar" y no piden términos de uso.',
                     ),
                     _Punto(
                       'Los demás (Himnos Majestuosos, Himnos de Gracia, Celebremos su Gloria, Himnario Bautista, El Nuevo Himnario Popular) se descargan con su botón "Descargar". Antes se muestran los términos de uso: descárgalos solo si tienes ese himnario en físico.',
@@ -48,7 +48,7 @@ class AyudaScreen extends StatelessWidget {
                       'El buscador de la pantalla principal busca por título en todos los himnarios de la afinación elegida.',
                     ),
                     _Punto(
-                      'Por número: 11 busca el himno 11 en todos ellos. Con letra busca solo en uno: N11 es el del Himnario Navideño Bautista, M11 el de Himnos Majestuosos, G11 el de Himnos de Gracia, C11 el de Celebremos su Gloria, B11 el del Himnario Bautista y P11 el de El Nuevo Himnario Popular. En Si♭, T11 es el del Himnario Navideño Bautista Si♭; en Fa, F11 el del Himnario Navideño Bautista Fa, y en Clave de Do, V11 el del Himnario Navideño Bautista Clave de Do.',
+                      'Por número: 11 busca el himno 11 en todos ellos. Con letra busca solo en uno: N11 es el del Himnario Navideño Bautista, S11 el de Partituras Selectas, M11 el de Himnos Majestuosos, G11 el de Himnos de Gracia, C11 el de Celebremos su Gloria, B11 el del Himnario Bautista y P11 el de El Nuevo Himnario Popular. En Si♭, T11 es el del Himnario Navideño Bautista Si♭; en Fa, F11 el del Himnario Navideño Bautista Fa, y en Clave de Do, V11 el del Himnario Navideño Bautista Clave de Do.',
                     ),
                     _Punto(
                       'Si eliges un himno de un himnario que no has descargado, primero te ofrece descargarlo.',
@@ -98,7 +98,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Subtitulo('Guardar respaldo'),
                     _Punto(
-                      'Crea un archivo con todos los himnarios descargados (himnarios-fecha.zip; con los diez himnarios pesa cerca de 300 MB) sin usar internet.',
+                      'Crea un archivo con todos los himnarios descargados (himnarios-fecha.zip; con los once himnarios pesa cerca de 300 MB) sin usar internet.',
                     ),
                     _Punto(
                       'En Android queda en la carpeta Descargas; en iPad eliges dónde guardarlo, por ejemplo en Archivos.',
@@ -163,7 +163,7 @@ class AyudaScreen extends StatelessWidget {
                   contenido: [
                     _Subtitulo('Descargar un himnario'),
                     _Punto(
-                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnario Navideño Bautista 5 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB, Himnario Bautista 58 MB, El Nuevo Himnario Popular 46 MB, Himnario Navideño Bautista Si♭ 5 MB, Himnario Navideño Bautista Fa 5 MB, Himnario Navideño Bautista Clave de Do 5 MB; mejor con Wi-Fi). Después funciona sin internet.',
+                      '"Descargar" guarda el himnario en el dispositivo (Ministerio Musical cerca de 29 MB, Himnario Navideño Bautista 5 MB, Partituras Selectas menos de 1 MB, Himnos Majestuosos 72 MB, Himnos de Gracia 18 MB, Celebremos su Gloria 69 MB, Himnario Bautista 58 MB, El Nuevo Himnario Popular 46 MB, Himnario Navideño Bautista Si♭ 5 MB, Himnario Navideño Bautista Fa 5 MB, Himnario Navideño Bautista Clave de Do 5 MB; mejor con Wi-Fi). Después funciona sin internet.',
                     ),
                     _Subtitulo(
                       'Verificar descargas (menú ⋮ de la pantalla principal)',

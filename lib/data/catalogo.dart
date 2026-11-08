@@ -13,6 +13,7 @@ import 'himnos_navidenno_sib.dart';
 import 'himnos_navidenno_clave_do.dart';
 import 'himnos_navidenno_fa.dart';
 import 'himnos_popular.dart';
+import 'himnos_selectas.dart';
 
 /// Un himno junto con el himnario al que pertenece.
 class HimnoEncontrado {
@@ -39,6 +40,17 @@ class Catalogo {
     incluido: true,
     color: const Color(0xFF16471B),
     himnos: himnosNavidenno,
+  );
+
+  /// Himnos sueltos para la orquesta, en el formato del Navideño; no piden
+  /// términos de uso.
+  static final Himnario selectas = Himnario(
+    id: 'selectas',
+    nombre: 'Partituras Selectas',
+    prefijo: 'S',
+    incluido: true,
+    color: const Color(0xFF310E62),
+    himnos: himnosSelectas,
   );
 
   /// El Navideño transportado para trompeta en Si♭.
@@ -135,6 +147,7 @@ class Catalogo {
 
   static final List<Himnario> todos = [
     ministerio,
+    selectas,
     navidenno,
     majestuoso,
     gracia,
