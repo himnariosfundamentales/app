@@ -30,7 +30,7 @@ final List<Himno> himnosNavidennoSib = [
   Himno(nombre: "Tú dejaste tu trono", numero: 26),
   Himno(nombre: "En sombrío invierno", numero: 27),
   Himno(nombre: "Ved al niñito", numero: 28),
-  Himno(nombre: "Ve, dilo en las montañas", numero: 29),
+  Himno(nombre: "Ve, dilo a las montañas", numero: 29),
   Himno(nombre: "Venid, fieles todos", numero: 30),
   Himno(nombre: "Guarda, ¿qué noticia das?", numero: 31),
   Himno(nombre: "Vamos magos hoy a Belén", numero: 32),

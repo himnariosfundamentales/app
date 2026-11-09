@@ -12,6 +12,7 @@ import 'himnos_navidenno.dart';
 import 'himnos_navidenno_sib.dart';
 import 'himnos_navidenno_clave_do.dart';
 import 'himnos_navidenno_fa.dart';
+import 'himnos_navidenno_mib.dart';
 import 'himnos_popular.dart';
 import 'himnos_selectas.dart';
 
@@ -73,6 +74,17 @@ class Catalogo {
     color: const Color(0xFF6B3E1F),
     himnos: himnosNavidennoFa,
     afinacion: Afinacion.enFa,
+  );
+
+  /// El Navideño transportado para clarinete contrabajo en Mi♭.
+  static final Himnario navidennoMib = Himnario(
+    id: 'navidenno_mib',
+    nombre: 'Himnario Navideño Bautista Mi♭',
+    prefijo: 'E',
+    incluido: true,
+    color: const Color(0xFF45474C),
+    himnos: himnosNavidennoMib,
+    afinacion: Afinacion.enMiBemol,
   );
 
   /// El Navideño en clave de Do (las 4 voces, sin transportar), para viola.
@@ -156,6 +168,7 @@ class Catalogo {
     popular,
     navidennoSib,
     navidennoFa,
+    navidennoMib,
     navidennoClaveDo,
   ];
 
