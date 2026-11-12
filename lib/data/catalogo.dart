@@ -123,10 +123,11 @@ class Catalogo {
     incluido: false,
     color: const Color(0xFFB85C1E),
     himnos: himnosCelebremos,
-    // La primera hoja va a la izquierda en el libro, y antes de estas había
-    // una portadilla de sección que no se incluyó.
+    // La primera hoja va a la derecha, como en los otros himnarios (en el libro
+    // impreso va a la izquierda, junto al 2-1, que queda donde estaba). Antes
+    // de las demás había una portadilla de sección que no se incluyó.
     blancosAntes: const {
-      '2-1',
+      '1-1',
       '110-1',
       '249-1',
       '268-1_269-1',

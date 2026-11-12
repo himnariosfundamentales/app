@@ -49,6 +49,10 @@ class _InicioScreenState extends State<InicioScreen> {
   // pasar los de Do al abrir la app.
   Afinacion? _afinacion;
 
+  // 1 si la afinación nueva está a la derecha de la anterior en el selector,
+  // -1 si está a la izquierda: de ese lado entran los himnarios al cambiar.
+  int _direccion = 1;
+
   @override
   void initState() {
     super.initState();
@@ -100,9 +104,12 @@ class _InicioScreenState extends State<InicioScreen> {
         await ActualizacionService.revisarTodos();
     if (!mounted) return;
     setState(() => _actualizaciones = _pendientes(revisiones));
-    if (_actualizaciones.isNotEmpty && _sinNadaEncima) {
-      await _ofrecerActualizacion();
-    }
+    if (_actualizaciones.isEmpty) return;
+    // Con versión nueva de la app, su aviso ("Actualizar") baja también estas
+    // hojas: no se ofrecen aparte, para que no salgan dos avisos juntos. Si se
+    // elige "Después", quedan en el botón de actualización de arriba.
+    if (await VersionAppService.hayVersionNueva() || !mounted) return;
+    if (_sinNadaEncima) await _ofrecerActualizacion();
   }
 
   Future<void> _cargarAfinacion() async {
@@ -111,8 +118,30 @@ class _InicioScreenState extends State<InicioScreen> {
   }
 
   void _elegirAfinacion(Afinacion afinacion) {
+    final Afinacion? anterior = _afinacion;
+    if (anterior != null) {
+      _direccion =
+          Catalogo.afinaciones.indexOf(afinacion) >=
+              Catalogo.afinaciones.indexOf(anterior)
+          ? 1
+          : -1;
+    }
     unawaited(AfinacionService.elegir(afinacion));
     _cambiarAfinacion(afinacion);
+  }
+
+  // Como al pasar páginas: deslizar el dedo hacia la izquierda trae la
+  // afinación de la derecha (Do, Si♭, Fa...) y hacia la derecha regresa. En la
+  // primera y en la última solo se puede ir hacia el otro lado.
+  void _deslizar(DragEndDetails detalles) {
+    final Afinacion? actual = _afinacion;
+    final double velocidad = detalles.primaryVelocity ?? 0;
+    if (actual == null || velocidad.abs() < 300) return;
+    final List<Afinacion> afinaciones = Catalogo.afinaciones;
+    final int siguiente =
+        afinaciones.indexOf(actual) + (velocidad < 0 ? 1 : -1);
+    if (siguiente < 0 || siguiente >= afinaciones.length) return;
+    _elegirAfinacion(afinaciones[siguiente]);
   }
 
   // Si ya hay algo escrito, se busca de nuevo en los de la nueva afinación.
@@ -407,15 +436,22 @@ class _InicioScreenState extends State<InicioScreen> {
         ),
         centerTitle: true,
         actions: [
-          if (hojasPendientes > 0)
-            IconButton(
-              tooltip: 'Descargar actualización',
-              onPressed: _ofrecerActualizacion,
-              icon: Badge(
-                label: Text('$hojasPendientes'),
-                child: const Icon(Icons.system_update_alt),
-              ),
-            ),
+          // Con versión nueva de la app no sale: su "Actualizar" ya baja estas
+          // hojas. Queda solo para lo que falte cuando la app está al día.
+          ValueListenableBuilder<bool>(
+            valueListenable: VersionAppService.versionNueva,
+            builder: (context, hayVersionNueva, _) =>
+                hojasPendientes > 0 && !hayVersionNueva
+                ? IconButton(
+                    tooltip: 'Descargar actualización',
+                    onPressed: _ofrecerActualizacion,
+                    icon: Badge(
+                      label: Text('$hojasPendientes'),
+                      child: const Icon(Icons.system_update_alt),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
           PopupMenuButton<String>(
             tooltip: 'Más opciones',
             onSelected: (opcion) => switch (opcion) {
@@ -479,9 +515,36 @@ class _InicioScreenState extends State<InicioScreen> {
           if (afinacion != null) ...[
             if (Catalogo.afinaciones.length > 1) _construirSelector(afinacion),
             Expanded(
-              child: _busqueda.text.trim().isEmpty
-                  ? _construirHimnarios(afinacion)
-                  : _construirResultados(afinacion),
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onHorizontalDragEnd: Catalogo.afinaciones.length > 1
+                    ? _deslizar
+                    : null,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  // La que entra llega desde el lado de su afinación y la que
+                  // sale se va hacia el otro.
+                  transitionBuilder: (child, animacion) {
+                    final bool entra = child.key == ValueKey(afinacion);
+                    return FadeTransition(
+                      opacity: animacion,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: Offset((entra ? 0.25 : -0.25) * _direccion, 0),
+                          end: Offset.zero,
+                        ).animate(animacion),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey(afinacion),
+                    child: _busqueda.text.trim().isEmpty
+                        ? _construirHimnarios(afinacion)
+                        : _construirResultados(afinacion),
+                  ),
+                ),
+              ),
             ),
           ],
         ],

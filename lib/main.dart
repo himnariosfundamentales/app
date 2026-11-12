@@ -84,6 +84,7 @@ class _HimnarioAppState extends State<HimnarioApp> {
       title: 'Himnario',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: _mensajes,
+      navigatorKey: VersionAppService.navegador,
       theme: ThemeData(colorSchemeSeed: Colors.blue, useMaterial3: true),
       home: FutureBuilder<bool>(
         future: _descargaCompleta,

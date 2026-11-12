@@ -41,7 +41,7 @@ class AyudaScreen extends StatelessWidget {
                       'Debajo del buscador eliges la afinación. Do muestra los himnarios de siempre, para voz, piano y guitarra. Si♭ muestra los transportados para trompeta y otros instrumentos en Si♭, Fa los transportados para corno francés, Mi♭ los transportados para clarinete contrabajo y Clave de Do los escritos en clave de Do para viola.',
                     ),
                     _Punto(
-                      'Los buscadores buscan solo en los himnarios de esa afinación. La app recuerda la que elegiste.',
+                      'Los buscadores buscan solo en los himnarios de esa afinación. La app recuerda la que elegiste. También puedes cambiar de afinación deslizando el dedo a los lados sobre los himnarios.',
                     ),
                     _Subtitulo('Buscar en todos'),
                     _Punto(
