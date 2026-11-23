@@ -71,5 +71,5 @@ final List<Himno> himnosNavidennoFa = [
   Himno(nombre: "Alegría por doquiera", numero: 67),
   Himno(nombre: "Oíd su voz, ya cerca está", numero: 68),
   Himno(nombre: "Ven, Jesús, muy esperado", numero: 69),
-  Himno(nombre: "Rey de Reyes", numero: 70),
+  Himno(nombre: "Rey de reyes", numero: 70),
 ];
