@@ -1,6 +1,6 @@
 import '../models/himno.dart';
 
-// Himnario Navideño Bautista para corno en Fa: los 70 himnos, con los mismos títulos que el Navideño.
+// Himnario Navideño Bautista para corno en Fa: los 71 himnos, con los mismos títulos que el Navideño.
 final List<Himno> himnosNavidennoFa = [
   Himno(nombre: "Allá en el pesebre", numero: 1),
   Himno(nombre: "Al mundo paz", numero: 2),
@@ -72,4 +72,5 @@ final List<Himno> himnosNavidennoFa = [
   Himno(nombre: "Oíd su voz, ya cerca está", numero: 68),
   Himno(nombre: "Ven, Jesús, muy esperado", numero: 69),
   Himno(nombre: "Rey de reyes", numero: 70),
+  Himno(nombre: "Mil años", numero: 71),
 ];

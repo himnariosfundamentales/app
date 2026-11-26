@@ -73,4 +73,5 @@ final List<Himno> himnosNavidenno = [
   Himno(nombre: "Oíd su voz, ya cerca está", numero: 68),
   Himno(nombre: "Ven, Jesús, muy esperado", numero: 69),
   Himno(nombre: "Rey de reyes", numero: 70),
+  Himno(nombre: "Mil años", numero: 71),
 ];
